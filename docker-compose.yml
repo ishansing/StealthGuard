@@ -77,5 +77,21 @@ services:
       timeout: 5s
       retries: 10
 
+  admin:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    command: ["bun", "run", "dev:admin"]
+    ports:
+      - "5174:5174"
+    depends_on:
+      java_gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:5174/"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   pgdata:

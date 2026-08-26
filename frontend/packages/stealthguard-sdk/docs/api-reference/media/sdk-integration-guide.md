@@ -39,9 +39,13 @@ the server.
 const onLogin = async (e) => {
   e.preventDefault()
   const result = await flush()
-  if (result?.decision === 'allow') { /* proceed */ }
-  else if (result?.decision === 'block') { /* hard stop */ }
-  else { /* show the accessible challenge */ }
+  if (result?.decision === 'allow') {
+    /* proceed */
+  } else if (result?.decision === 'block') {
+    /* hard stop */
+  } else {
+    /* show the accessible challenge */
+  }
 }
 ```
 
