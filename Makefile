@@ -21,7 +21,7 @@ test:
 
 lint:
 	$(COMPOSE) run --rm java_gateway ./mvnw checkstyle:check && \
-	$(COMPOSE) run --rm ml_service ruff check app tests && \
+	docker compose run --rm ml_service ruff check app training tests && \
 	$(COMPOSE) run --rm frontend bun run lint
 
 # Phase 6: bot simulator + human session recorder.

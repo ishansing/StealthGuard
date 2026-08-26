@@ -23,6 +23,7 @@ services:
       MODEL_DIR: ${MODEL_DIR:-/app/models}
       HUMAN_THRESHOLD: ${HUMAN_THRESHOLD:-0.8}
       BOT_THRESHOLD: ${BOT_THRESHOLD:-0.4}
+      DB_URL: postgresql://${POSTGRES_USER:-stealthguard}:${POSTGRES_PASSWORD:-stealthguard_dev}@db:5432/${POSTGRES_DB:-stealthguard}
     ports:
       - "8000:8000"
     depends_on:
