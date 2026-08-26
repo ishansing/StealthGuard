@@ -1,0 +1,17 @@
+# Root build context is used only by the java_gateway image (it needs infra/sql).
+.git
+.github
+docs
+frontend
+ml-service
+scripts
+**/node_modules
+**/target
+**/dist
+**/__pycache__
+**/.venv
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+.env
+*.log

@@ -35,7 +35,9 @@ services:
       retries: 10
 
   java_gateway:
-    build: ./java-gateway
+    build:
+      context: .
+      dockerfile: java-gateway/Dockerfile
     environment:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-stealthguard}
       POSTGRES_USER: ${POSTGRES_USER:-stealthguard}

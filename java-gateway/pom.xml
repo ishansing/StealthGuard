@@ -20,6 +20,9 @@
   <properties>
     <java.version>21</java.version>
     <springdoc.version>2.8.6</springdoc.version>
+    <!-- Newer Testcontainers negotiates the Docker API version; the Boot-managed
+         version hardcodes API 1.32, which Docker >= 29 rejects. -->
+    <testcontainers.version>1.21.3</testcontainers.version>
   </properties>
 
   <dependencies>
@@ -49,6 +52,19 @@
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
       <version>${springdoc.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -75,6 +91,15 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- Testcontainers 1.21.3 hardcodes Docker API 1.32, rejected by Docker >= 29
+               (min API 1.40). Force the negotiated version. Requires Docker >= 25. -->
+          <argLine>-Dapi.version=1.44</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <configuration>
           <configLocation>checkstyle.xml</configLocation>
@@ -89,6 +114,30 @@
             <goals>
               <goal>check</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-sql-migrations</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}/db/migration</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.basedir}/../infra/sql</directory>
+                  <includes>
+                    <include>*.sql</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
           </execution>
         </executions>
       </plugin>

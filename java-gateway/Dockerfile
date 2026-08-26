@@ -1,5 +1,6 @@
 # Single-stage: the maven image doubles as the runtime so `make test`
 # (`docker compose run java_gateway ./mvnw test`) works from the same image.
+# Build context is the repo root so infra/sql (Flyway migrations) is available.
 FROM maven:3.9-eclipse-temurin-21
 WORKDIR /app
 
@@ -8,12 +9,13 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY mvnw mvnw.cmd ./
-COPY .mvn .mvn
-COPY pom.xml checkstyle.xml ./
+COPY java-gateway/mvnw java-gateway/mvnw.cmd ./
+COPY java-gateway/.mvn .mvn
+COPY java-gateway/pom.xml java-gateway/checkstyle.xml ./
+COPY infra/sql /infra/sql
 RUN ./mvnw -B -q dependency:go-offline || true
 
-COPY src src
+COPY java-gateway/src src
 RUN ./mvnw -B -q -DskipTests package
 
 EXPOSE 8080

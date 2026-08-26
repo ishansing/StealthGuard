@@ -15,9 +15,9 @@ smoke:
 	./scripts/smoke_test.sh
 
 test:
-	$(COMPOSE) run --rm java_gateway ./mvnw test && \
-	$(COMPOSE) run --rm ml_service pytest && \
-	$(COMPOSE) run --rm frontend bun run test
+	docker compose run --rm -v /var/run/docker.sock:/var/run/docker.sock java_gateway ./mvnw test && \
+	docker compose run --rm ml_service pytest && \
+	docker compose run --rm frontend bun run test
 
 lint:
 	$(COMPOSE) run --rm java_gateway ./mvnw checkstyle:check && \
