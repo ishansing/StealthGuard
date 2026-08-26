@@ -9,6 +9,19 @@ class ScoreRequest(BaseModel):
     features: dict[str, float]
 
 
+class FeaturesRequest(BaseModel):
+    """Raw telemetry (§6.2) from which the canonical feature vector is computed."""
+
+    keystrokes: list[dict] = []
+    mouse_moves: list[dict] = []
+    touch_moves: list[dict] = []
+    clicks: list[dict] = []
+
+
+class FeaturesResponse(BaseModel):
+    features: dict[str, float]
+
+
 class ReasonCode(BaseModel):
     code: str
     weight: float

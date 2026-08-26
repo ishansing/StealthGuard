@@ -17,7 +17,7 @@ services:
       timeout: 5s
       retries: 10
 
-  ml_service:
+  ml-service:
     build: ./ml-service
     environment:
       MODEL_DIR: ${MODEL_DIR:-/app/models}
@@ -43,7 +43,7 @@ services:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-stealthguard}
       POSTGRES_USER: ${POSTGRES_USER:-stealthguard}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stealthguard_dev}
-      ML_SERVICE_URL: ${ML_SERVICE_URL:-http://ml_service:8000}
+      ML_SERVICE_URL: ${ML_SERVICE_URL:-http://ml-service:8000}
       HUMAN_ALLOW_THRESHOLD: ${HUMAN_ALLOW_THRESHOLD:-0.8}
       BOT_BLOCK_THRESHOLD: ${BOT_BLOCK_THRESHOLD:-0.4}
       MAX_EVENTS_PER_ARRAY: ${MAX_EVENTS_PER_ARRAY:-5000}
@@ -54,7 +54,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      ml_service:
+      ml-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]

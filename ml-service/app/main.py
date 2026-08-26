@@ -8,7 +8,16 @@ from datetime import UTC, datetime
 from fastapi import Depends, FastAPI, HTTPException, Request
 
 from app.config import Settings, get_settings
-from app.models import HealthResponse, ModelVersionResponse, ReasonCode, ScoreRequest, ScoreResponse
+from app.features import compute_features
+from app.models import (
+    FeaturesRequest,
+    FeaturesResponse,
+    HealthResponse,
+    ModelVersionResponse,
+    ReasonCode,
+    ScoreRequest,
+    ScoreResponse,
+)
 from app.pii import contains_pii
 from app.scorer import Scorer, ScoreResult, load_scorer
 
@@ -86,6 +95,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 shadow_result.model_version,
             )
         return _result_to_response(result, req.session_id)
+
+    @app.post(
+        "/features",
+        response_model=FeaturesResponse,
+        dependencies=[Depends(pii_guard)],
+        tags=["scoring"],
+    )
+    def features(req: FeaturesRequest) -> FeaturesResponse:
+        """Compute the canonical feature vector from raw telemetry (§6.2)."""
+        return FeaturesResponse(features=compute_features(req.model_dump()))
 
     return app
 

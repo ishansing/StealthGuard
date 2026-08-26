@@ -16,12 +16,12 @@ smoke:
 
 test:
 	docker compose run --rm -v /var/run/docker.sock:/var/run/docker.sock java_gateway ./mvnw test && \
-	docker compose run --rm ml_service pytest && \
+	docker compose run --rm ml-service pytest && \
 	docker compose run --rm frontend bun run test
 
 lint:
 	$(COMPOSE) run --rm java_gateway ./mvnw checkstyle:check && \
-	docker compose run --rm ml_service ruff check app training tests && \
+	docker compose run --rm ml-service ruff check app training tests && \
 	$(COMPOSE) run --rm frontend bun run lint
 
 # Phase 6: bot simulator + human session recorder.

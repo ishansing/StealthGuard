@@ -97,7 +97,7 @@ def compute_features(telemetry: Mapping[str, Any]) -> dict[str, float]:
         if down is not None and up is not None:
             holds.append((float(up) - float(down)) * 1000.0)
 
-    interkeys = [b - a for a, b in pairwise(down_times)]
+    interkeys = [(b - a) * 1000.0 for a, b in pairwise(down_times)]
 
     all_moves: list[tuple[float, float, float]] = []
     for m in list(moves) + list(touches):

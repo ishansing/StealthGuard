@@ -1,5 +1,6 @@
 import math
 
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -60,6 +61,21 @@ def test_malformed_events_never_crash() -> None:
     }
     features = compute_features(malformed)
     assert all(math.isfinite(value) for value in features.values())
+
+
+def test_interkey_features_are_in_milliseconds() -> None:
+    features = compute_features(
+        {
+            "keystrokes": [
+                {"key": "a", "down_time": 0.0, "up_time": 0.1},
+                {"key": "b", "down_time": 1.0, "up_time": 1.1},
+                {"key": "c", "down_time": 2.5, "up_time": 2.6},
+            ]
+        }
+    )
+    assert features["keystroke_mean_interkey_ms"] == 1250.0
+    assert features["keystroke_std_interkey_ms"] == 250.0
+    assert features["keystroke_mean_hold_ms"] == pytest.approx(100.0)
 
 
 def test_human_like_telemetry_differs_from_bot_like() -> None:
