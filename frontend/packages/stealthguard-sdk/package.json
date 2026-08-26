@@ -1,0 +1,38 @@
+{
+  "name": "@stealthguard/sdk",
+  "version": "0.1.0",
+  "description": "StealthGuard telemetry SDK: privacy-first passive bot detection",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "docs": "typedoc --out docs/api-reference src/index.ts"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "tsup": "^8.5.0",
+    "typedoc": "^0.28.0",
+    "typescript": "~6.0.2"
+  }
+}

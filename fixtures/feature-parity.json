@@ -1,0 +1,218 @@
+{
+  "generated_by": "ml-service/app/features.py",
+  "cases": [
+    {
+      "name": "human-typing",
+      "input": {
+        "keystrokes": [
+          {
+            "key": "a",
+            "down_time": 1714045000.1,
+            "up_time": 1714045000.22
+          },
+          {
+            "key": "b",
+            "down_time": 1714045000.5,
+            "up_time": 1714045000.66
+          },
+          {
+            "key": "c",
+            "down_time": 1714045000.9,
+            "up_time": 1714045001.05
+          },
+          {
+            "key": "d",
+            "down_time": 1714045001.35,
+            "up_time": 1714045001.52
+          },
+          {
+            "key": "e",
+            "down_time": 1714045001.8,
+            "up_time": 1714045001.9
+          }
+        ],
+        "mouse_moves": [
+          {
+            "x": 100,
+            "y": 100,
+            "t": 1714045000.3
+          },
+          {
+            "x": 140,
+            "y": 180,
+            "t": 1714045000.7
+          },
+          {
+            "x": 120,
+            "y": 220,
+            "t": 1714045001.1
+          },
+          {
+            "x": 200,
+            "y": 250,
+            "t": 1714045001.5
+          },
+          {
+            "x": 260,
+            "y": 230,
+            "t": 1714045001.9
+          },
+          {
+            "x": 280,
+            "y": 300,
+            "t": 1714045002.3
+          }
+        ],
+        "touch_moves": [],
+        "clicks": [
+          {
+            "x": 280,
+            "y": 300,
+            "t": 1714045002.4
+          }
+        ]
+      },
+      "expected": {
+        "keystroke_mean_hold_ms": 140.00005722045898,
+        "keystroke_std_hold_ms": 26.076766466324695,
+        "keystroke_mean_interkey_ms": 425.00001192092896,
+        "keystroke_std_interkey_ms": 24.999916553639423,
+        "typing_speed_chars_per_s": 2.173912863199577,
+        "mouse_mean_speed_px_per_s": 177.82537672722856,
+        "mouse_std_speed_px_per_s": 40.35009807719206,
+        "mouse_path_efficiency": 0.7565637557983967,
+        "mouse_idle_ratio": 0.13043485472016914,
+        "mouse_direction_changes": 3.0,
+        "session_duration_ms": 2300.0001907348633,
+        "event_count": 12.0
+      }
+    },
+    {
+      "name": "bot-uniform",
+      "input": {
+        "keystrokes": [
+          {
+            "key": "a",
+            "down_time": 1714045000.0,
+            "up_time": 1714045000.08
+          },
+          {
+            "key": "b",
+            "down_time": 1714045000.08,
+            "up_time": 1714045000.16
+          },
+          {
+            "key": "c",
+            "down_time": 1714045000.16,
+            "up_time": 1714045000.24
+          },
+          {
+            "key": "d",
+            "down_time": 1714045000.24,
+            "up_time": 1714045000.32
+          },
+          {
+            "key": "e",
+            "down_time": 1714045000.32,
+            "up_time": 1714045000.4
+          }
+        ],
+        "mouse_moves": [
+          {
+            "x": 0,
+            "y": 0,
+            "t": 1714045000.0
+          },
+          {
+            "x": 10,
+            "y": 10,
+            "t": 1714045000.05
+          },
+          {
+            "x": 20,
+            "y": 20,
+            "t": 1714045000.1
+          },
+          {
+            "x": 30,
+            "y": 30,
+            "t": 1714045000.15
+          },
+          {
+            "x": 40,
+            "y": 40,
+            "t": 1714045000.2
+          }
+        ],
+        "touch_moves": [],
+        "clicks": []
+      },
+      "expected": {
+        "keystroke_mean_hold_ms": 80.00001907348633,
+        "keystroke_std_hold_ms": 0.00011680077279964343,
+        "keystroke_mean_interkey_ms": 79.99998331069946,
+        "keystroke_std_interkey_ms": 0.00010323827311807139,
+        "typing_speed_chars_per_s": 12.499997019768472,
+        "mouse_mean_speed_px_per_s": 282.8426450408833,
+        "mouse_std_speed_px_per_s": 0.0005840021931543899,
+        "mouse_path_efficiency": 1.0,
+        "mouse_idle_ratio": 0.5,
+        "mouse_direction_changes": 0.0,
+        "session_duration_ms": 400.00009536743164,
+        "event_count": 10.0
+      }
+    },
+    {
+      "name": "sparse",
+      "input": {
+        "keystrokes": [
+          {
+            "key": "x",
+            "down_time": 1714045000.0,
+            "up_time": 1714045000.1
+          }
+        ],
+        "mouse_moves": [],
+        "touch_moves": [],
+        "clicks": []
+      },
+      "expected": {
+        "keystroke_mean_hold_ms": 99.99990463256836,
+        "keystroke_std_hold_ms": 0.0,
+        "keystroke_mean_interkey_ms": 0.0,
+        "keystroke_std_interkey_ms": 0.0,
+        "typing_speed_chars_per_s": 10.000009536752259,
+        "mouse_mean_speed_px_per_s": 0.0,
+        "mouse_std_speed_px_per_s": 0.0,
+        "mouse_path_efficiency": 0.0,
+        "mouse_idle_ratio": 1.0,
+        "mouse_direction_changes": 0.0,
+        "session_duration_ms": 99.99990463256836,
+        "event_count": 1.0
+      }
+    },
+    {
+      "name": "empty",
+      "input": {
+        "keystrokes": [],
+        "mouse_moves": [],
+        "touch_moves": [],
+        "clicks": []
+      },
+      "expected": {
+        "keystroke_mean_hold_ms": 0.0,
+        "keystroke_std_hold_ms": 0.0,
+        "keystroke_mean_interkey_ms": 0.0,
+        "keystroke_std_interkey_ms": 0.0,
+        "typing_speed_chars_per_s": 0.0,
+        "mouse_mean_speed_px_per_s": 0.0,
+        "mouse_std_speed_px_per_s": 0.0,
+        "mouse_path_efficiency": 0.0,
+        "mouse_idle_ratio": 0.0,
+        "mouse_direction_changes": 0.0,
+        "session_duration_ms": 0.0,
+        "event_count": 0.0
+      }
+    }
+  ]
+}
