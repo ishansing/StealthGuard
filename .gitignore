@@ -1,0 +1,38 @@
+# ---- Tooling ----
+node_modules/
+dist/
+build/
+target/
+*.log
+.mise.toml
+.mise.local.toml
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# ---- Java ----
+*.class
+.mvn/wrapper/maven-wrapper.jar
+
+# ---- Env / secrets ----
+.env
+*.pem
+
+# ---- Playwright ----
+test-results/
+playwright-report/
+blob-report/
+
+# ---- Editor ----
+.vscode/
+.idea/
+*.swp

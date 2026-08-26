@@ -1,0 +1,76 @@
+name: stealthguard
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stealthguard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stealthguard_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-stealthguard}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stealthguard} -d ${POSTGRES_DB:-stealthguard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ml_service:
+    build: ./ml-service
+    environment:
+      MODEL_DIR: ${MODEL_DIR:-/app/models}
+      HUMAN_THRESHOLD: ${HUMAN_THRESHOLD:-0.8}
+      BOT_THRESHOLD: ${BOT_THRESHOLD:-0.4}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  java_gateway:
+    build: ./java-gateway
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-stealthguard}
+      POSTGRES_USER: ${POSTGRES_USER:-stealthguard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stealthguard_dev}
+      ML_SERVICE_URL: ${ML_SERVICE_URL:-http://ml_service:8000}
+      HUMAN_ALLOW_THRESHOLD: ${HUMAN_ALLOW_THRESHOLD:-0.8}
+      BOT_BLOCK_THRESHOLD: ${BOT_BLOCK_THRESHOLD:-0.4}
+      MAX_EVENTS_PER_ARRAY: ${MAX_EVENTS_PER_ARRAY:-5000}
+      HMAC_ENABLED: ${HMAC_ENABLED:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      ml_service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      java_gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:5173/"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

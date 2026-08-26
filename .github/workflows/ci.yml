@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  java-gateway:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: java-gateway
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Test
+        run: ./mvnw -B test
+      - name: Lint (checkstyle)
+        run: ./mvnw -B checkstyle:check
+
+  ml-service:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ml-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install
+        run: pip install -e '.[dev]'
+      - name: Test
+        run: pytest
+      - name: Lint
+        run: ruff check app tests
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: Test
+        run: bun run test
+      - name: Lint
+        run: bun run lint
+      - name: Format check
+        run: bun run format:check

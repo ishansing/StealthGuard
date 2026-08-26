@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: java-gateway
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://db:5432/stealthguard}
+    username: ${POSTGRES_USER:stealthguard}
+    password: ${POSTGRES_PASSWORD:stealthguard_dev}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+stealthguard:
+  ml-service-url: ${ML_SERVICE_URL:http://ml_service:8000}
+  human-allow-threshold: ${HUMAN_ALLOW_THRESHOLD:0.8}
+  bot-block-threshold: ${BOT_BLOCK_THRESHOLD:0.4}
+  max-events-per-array: ${MAX_EVENTS_PER_ARRAY:5000}
+  hmac-enabled: ${HMAC_ENABLED:false}
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
