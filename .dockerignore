@@ -1,8 +1,7 @@
-# Root build context is used by the java_gateway and frontend images.
+# Root build context is used by the java_gateway, frontend, and ml-service images.
 .git
 .github
 docs
-ml-service
 scripts
 **/node_modules
 **/target

@@ -1,0 +1,17 @@
+{
+  "name": "bot-sim",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "seed": "bun src/index.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "playwright": "^1.55.0"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vitest": "^3.2.4"
+  }
+}

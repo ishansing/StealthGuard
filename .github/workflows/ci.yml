@@ -40,6 +40,19 @@ jobs:
       - name: Lint
         run: ruff check app training tests
 
+  bot-sim:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scripts/bot-sim
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install --no-save playwright-core
+      - name: Persona sanity tests
+        run: bun run test
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

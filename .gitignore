@@ -7,6 +7,9 @@ target/
 .mise.toml
 .mise.local.toml
 
+# ---- Generated data (bot simulator output) ----
+scripts/bot-sim/out/
+
 # ---- Python ----
 __pycache__/
 *.py[cod]

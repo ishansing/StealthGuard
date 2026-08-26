@@ -24,13 +24,14 @@ lint:
 	docker compose run --rm ml-service ruff check app training tests && \
 	$(COMPOSE) run --rm frontend bun run lint
 
-# Phase 6: bot simulator + human session recorder.
+# Phase 6: bot simulator + human session recorder (writes CSV + populates DB).
 seed:
-	@echo "Phase 6: 'make seed' not implemented yet"
+	cd scripts/bot-sim && bun run seed --human 5 --naive 3 --jitter 2 --out out --demo http://localhost:5173 --gateway http://localhost:8080
 
-# Phase 2/6: train + register a model from seeded data.
+# Phase 2/6: train + register a model from seeded data, then reload the ML service.
 train:
-	@echo "Phase 2: 'make train' not implemented yet"
+	$(COMPOSE) run --rm -v ./scripts/bot-sim/out:/data:ro ml-service python -m training.train --data /data/sessions.csv --output-dir /app/models --version v1 --register-db
+	$(COMPOSE) restart ml-service
 
 demo: up seed train
 	@echo "Stack is up, seeded, and trained — ready to demo."

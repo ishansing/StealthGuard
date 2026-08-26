@@ -10,7 +10,16 @@ import pytest
 
 from app.features import compute_features
 
-FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "feature-parity.json"
+
+def _find_fixture() -> Path:
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "fixtures" / "feature-parity.json"
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError("fixtures/feature-parity.json not found")
+
+
+FIXTURE = _find_fixture()
 
 
 def test_parity_fixture_matches_canonical_features() -> None:

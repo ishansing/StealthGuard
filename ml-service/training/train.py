@@ -184,7 +184,12 @@ def main() -> None:
     parser.add_argument("--output-dir", default=os.environ.get("MODEL_DIR", "/app/models"))
     parser.add_argument("--version", default="v1")
     parser.add_argument(
-        "--register-db", default=os.environ.get("DB_URL"), help="Postgres URL to register the model"
+        "--register-db",
+        nargs="?",
+        const=os.environ.get("DB_URL"),
+        default=None,
+        help="Postgres URL to register the model (defaults to DB_URL)",
+
     )
     args = parser.parse_args()
 
