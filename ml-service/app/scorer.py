@@ -12,6 +12,9 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 import joblib
+import numpy as np
+from sklearn.isotonic import IsotonicRegression
+from sklearn.linear_model import LogisticRegression
 
 # Human-readable reason codes per feature, keyed by which way the
 # contribution pushed the score. "human" = pushed toward human-like,
@@ -83,6 +86,38 @@ def label_for_score(score: float, human_threshold: float, bot_threshold: float) 
 
 
 MODALITY_NAMES = {0: "mouse", 1: "keyboard", 2: "touch", 3: "switch"}
+
+
+class Calibrator:
+    """Probability calibrator over a base model's raw output (Phase 9 A2).
+
+    Platt scaling (sigmoid) fits a logistic regression on the base
+    probability; isotonic fits an isotonic regression. `calibrate` maps a base
+    probability to a calibrated one so `humanness_score = 0.8` means a stable
+    ~80% confidence across retrains (ADR-0008).
+    """
+
+    def __init__(self, method: str, model) -> None:
+        self.method = method
+        self.model = model
+
+    @classmethod
+    def fit(cls, method: str, base_proba: np.ndarray, y: np.ndarray) -> "Calibrator":
+        if method == "sigmoid":
+            model = LogisticRegression().fit(base_proba.reshape(-1, 1), y)
+        else:
+            model = IsotonicRegression(out_of_bounds="clip").fit(base_proba, y)
+        return cls(method, model)
+
+    def calibrate(self, base_proba: float) -> float:
+        if self.method == "sigmoid":
+            return float(self.model.predict_proba([[base_proba]])[0][1])
+        return float(self.model.predict([base_proba])[0])
+
+    def calibrate_array(self, base_proba: np.ndarray) -> np.ndarray:
+        if self.method == "sigmoid":
+            return self.model.predict_proba(base_proba.reshape(-1, 1))[:, 1]
+        return self.model.predict(base_proba)
 
 
 def thresholds_for_features(
@@ -193,7 +228,12 @@ class RuleBasedScorer(Scorer):
 
 
 class MLScorer(Scorer):
-    """Scorer backed by a trained model + metadata artifact (SPEC §9.1/§9.3)."""
+    """Scorer backed by a trained model + metadata artifact (SPEC §9.1/§9.3).
+
+    Uses the calibrated model (Phase 9 A2) for `humanness_score` when a
+    `calibrated.pkl` artifact exists; coefficients still come from the base
+    model for explainability.
+    """
 
     def __init__(
         self,
@@ -203,6 +243,7 @@ class MLScorer(Scorer):
         bot_threshold: float,
         explainer_path: str | None = None,
         modality_thresholds: dict[str, tuple[float, float]] | None = None,
+        calibrated_path: str | None = None,
     ) -> None:
         self.model = joblib.load(model_path)
         with open(metadata_path) as fh:
@@ -214,6 +255,11 @@ class MLScorer(Scorer):
         self.human_threshold = human_threshold
         self.bot_threshold = bot_threshold
         self.modality_thresholds = modality_thresholds or {}
+        self.calibrated = (
+            joblib.load(calibrated_path)
+            if calibrated_path and os.path.exists(calibrated_path)
+            else None
+        )
 
         if meta.get("model_type") == "logistic":
             self.coefficients = self.model.coef_[0]
@@ -234,7 +280,11 @@ class MLScorer(Scorer):
 
     def score(self, features: dict[str, float]) -> ScoreResult:
         z = self._z(features)
-        humanness = float(self.model.predict_proba([z])[0][1])
+        base_proba = float(self.model.predict_proba([z])[0][1])
+        if self.calibrated is not None:
+            humanness = self.calibrated.calibrate(base_proba)
+        else:
+            humanness = base_proba
         contributions = {
             f: float(c * zi) for f, c, zi in zip(self.feature_list, self.coefficients, z)
         }
@@ -264,13 +314,16 @@ def load_scorer(
         with open(meta) as fh:
             model_type = json.load(fh).get("model_type")
         explainer = None
+        calibrated = None
+        stem = os.path.basename(path)[: -len(".pkl")]
+        model_dir = os.path.dirname(path)
         if model_type == "random_forest":
             # "model.pkl" -> "explainer.pkl"; "model-v2.pkl" -> "explainer-v2.pkl"
-            stem = os.path.basename(path)[: -len(".pkl")]
-            explainer = os.path.join(
-                os.path.dirname(path), stem.replace("model", "explainer", 1) + ".pkl"
-            )
-        return MLScorer(path, meta, human_threshold, bot_threshold, explainer, modality_thresholds)
+            explainer = os.path.join(model_dir, stem.replace("model", "explainer", 1) + ".pkl")
+        calibrated = os.path.join(model_dir, stem.replace("model", "calibrated", 1) + ".pkl")
+        return MLScorer(
+            path, meta, human_threshold, bot_threshold, explainer, modality_thresholds, calibrated
+        )
 
     active: Scorer
     if os.path.exists(model_path) and os.path.exists(metadata_path):

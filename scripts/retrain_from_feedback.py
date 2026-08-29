@@ -114,6 +114,8 @@ def main() -> None:
         shutil.copy(Path(tmp) / "metadata.json", models / f"metadata-{args.shadow_version}.json")
         if (Path(tmp) / "explainer.pkl").exists():
             shutil.copy(Path(tmp) / "explainer.pkl", models / f"explainer-{args.shadow_version}.pkl")
+        if (Path(tmp) / "calibrated.pkl").exists():
+            shutil.copy(Path(tmp) / "calibrated.pkl", models / f"calibrated-{args.shadow_version}.pkl")
 
     active = MLScorer(
         str(models / "model.pkl"),

@@ -61,6 +61,29 @@ Edge-case rules (guarded so every output is finite; empty/malformed input → ze
 Standardization: features are z-scored against training means/stds (stored in
 `metadata.json`) before prediction and before coefficient×z explainability.
 
+## Calibration (Phase 9 A2)
+
+The raw model output is **calibrated** so `humanness_score` has a stable,
+comparable meaning across retrains and model versions (ADR-0008): `0.8` means
+"≈80% of sessions scored 0.8 are genuinely human", not merely "logit ≥ 0.8".
+
+- **Method:** `CalibratedClassifierCV`-style probability calibration — Platt
+  (sigmoid) and isotonic regressions are each fit on the base model's raw
+  predicted probabilities over a **stratified calibration split** (25% of the
+  training data, held out from model fitting). The better one by **Brier score
+  evaluated on the fit split** (data the calibrator never saw) is deployed as
+  `calibrated.pkl` — this penalizes overfitting the small calibration set.
+- **Storage:** the method and Brier score are recorded in `metadata.json` and
+  `model_registry.metrics_json`, so every model version documents how its
+  scores were calibrated.
+- **Serve:** `MLScorer` applies `calibrated.pkl` when present; the base
+  `model.pkl` still provides the coefficients for reason codes.
+- **Rule-based baseline:** exempt — it is not a probability model and its
+  heuristic sigmoid is documented as uncalibrated.
+- **Guarantee:** `test_score_calibration.py` verifies on a held-out fold that
+  the calibrated calibration curve is monotonic and moves closer to the
+  identity line than the raw curve.
+
 ## Explainability (§9.3)
 
 Each feature's contribution is `coefficient × standardized_value` (rule-based:
