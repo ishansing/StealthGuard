@@ -32,4 +32,9 @@ export interface StealthGuardOptions {
   privacyMode?: PrivacyMode
   /** Reuse an existing session instead of calling /session/init. */
   sessionId?: string
+  /** One-line integration (Phase 9 B2): discover matching elements and attach
+   *  a submit->flush listener automatically via start(). */
+  autoInstrument?: boolean
+  /** CSS selector for autoInstrument (default "form"). */
+  selector?: string
 }

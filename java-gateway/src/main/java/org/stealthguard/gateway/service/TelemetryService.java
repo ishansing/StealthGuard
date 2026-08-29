@@ -57,8 +57,12 @@ public class TelemetryService {
 
         DecisionResponse response;
         try {
-            Map<String, Double> features = resolveFeatures(request);
-            MlServiceClient.ScoreDto score = mlClient.score(request.sessionId().toString(), features);
+            MlServiceClient.FeatureResponse featureResp = resolveFeatures(request);
+            if (featureResp.shadow() != null) {
+                // Shadow-model output (Phase 9 A3): persisted with is_shadow=true, never a decision.
+                decisionService.recordShadow(session, featureResp.shadow().score(), featureResp.shadow().modelVersion());
+            }
+            MlServiceClient.ScoreDto score = mlClient.score(request.sessionId().toString(), featureResp.features());
             response = decisionService.record(session, score, modalityOf(request), trialMode, latencyMs(start));
         } catch (RuntimeException e) {
             // Fail-safe boundary (ADR 0005): any ML path failure (timeout, retry
@@ -97,11 +101,11 @@ public class TelemetryService {
             + (request.clicks() == null ? 0 : request.clicks().size());
     }
 
-    private Map<String, Double> resolveFeatures(TelemetryRequest request) {
+    private MlServiceClient.FeatureResponse resolveFeatures(TelemetryRequest request) {
         if (request.features() != null && !request.features().isEmpty()) {
-            return request.features();
+            return new MlServiceClient.FeatureResponse(request.features(), null);
         }
-        return mlClient.computeFeatures(rawTelemetry(request)).features();
+        return mlClient.computeFeatures(rawTelemetry(request));
     }
 
     private void persistEvents(Session session, TelemetryRequest request) {

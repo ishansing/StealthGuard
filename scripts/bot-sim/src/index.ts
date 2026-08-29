@@ -1,11 +1,14 @@
+import { appendFileSync, existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { appendPlanToCsv, initCsv, writeRawLog } from './csv'
 import { openBrowser, driveSession } from './driver'
 import {
+  adaptivePlan,
   makeAccessibilityPlan,
   makePlan,
   seededRng,
+  ADAPTIVE_JITTER,
   type AccessibilityPersona,
   type Persona,
   type SessionPlan,
@@ -31,10 +34,12 @@ interface Options {
   gateway: string
   seed: number
   accessibility: boolean
+  adaptive: number
+  fold: boolean
 }
 
 function parseArgs(argv: string[]): Options {
-  const opts: Options = { human: 0, naive: 0, jitter: 0, replay: 0, out: 'out', demo: 'http://localhost:5173', gateway: 'http://localhost:8080', seed: 42, accessibility: false }
+  const opts: Options = { human: 0, naive: 0, jitter: 0, replay: 0, out: 'out', demo: 'http://localhost:5173', gateway: 'http://localhost:8080', seed: 42, accessibility: false, adaptive: 0, fold: false }
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i]
     const value = (): string => {
@@ -53,6 +58,8 @@ function parseArgs(argv: string[]): Options {
       case '--gateway': opts.gateway = value(); break
       case '--seed': opts.seed = Number(value()); break
       case '--accessibility': opts.accessibility = true; break
+      case '--adaptive': opts.adaptive = Number(value()); break
+      case '--fold': opts.fold = true; break
       default: throw new Error(`unknown flag ${flag}`)
     }
   }
@@ -91,6 +98,36 @@ async function postTelemetry(gateway: string, sessionId: string, plan: SessionPl
   return body.decision ?? ''
 }
 
+// Evasion threshold: if this fraction of adaptive sessions is classified
+// human, we fold them back into training to harden the model (Phase 9 A4).
+const EVASION_FOLD_THRESHOLD = 0.3
+
+async function runAdaptive(opts: Options): Promise<void> {
+  const csvPath = join(opts.out, 'sessions.csv')
+  initCsv(csvPath)
+  let evaded = 0
+  for (let i = 0; i < opts.adaptive; i++) {
+    const rng = seededRng(opts.seed + 900 + i)
+    const plan = adaptivePlan(`adaptive-${i}`, rng, ADAPTIVE_JITTER)
+    const gatewaySession = await initGatewaySession(opts.gateway)
+    const decision = await postTelemetry(opts.gateway, gatewaySession, plan)
+    console.log(`${plan.session_id} [adaptive] -> ${decision}`)
+    if (decision === 'allow') evaded++
+    writeRawLog(opts.out, plan)
+    appendPlanToCsv(csvPath, plan) // labeled 'bot' — these are bots trying to pass
+  }
+  const evasion = opts.adaptive > 0 ? evaded / opts.adaptive : 0
+  console.log(`adaptive evasion rate: ${(evasion * 100).toFixed(0)}% (${evaded}/${opts.adaptive})`)
+  if (evasion > EVASION_FOLD_THRESHOLD && opts.fold) {
+    const seedCsv = 'out/sessions.csv'
+    const seedExists = existsSync(seedCsv)
+    appendFileSync(seedCsv, readFileSync(csvPath, 'utf-8').split('\n').slice(1).join('\n') + '\n')
+    console.log(`evasion above threshold — folded adaptive sessions into ${seedCsv}${seedExists ? ' (appended)' : ' (created)'}`)
+  } else if (evasion > EVASION_FOLD_THRESHOLD) {
+    console.log(`evasion above threshold ${EVASION_FOLD_THRESHOLD} — pass --fold to fold into training`)
+  }
+}
+
 async function runAccessibility(opts: Options): Promise<void> {
   const personas: AccessibilityPersona[] = ['screen-reader', 'switch', 'tremor']
   for (const persona of personas) {
@@ -108,8 +145,12 @@ async function main(): Promise<void> {
     await runAccessibility(opts)
     return
   }
+  if (opts.adaptive > 0) {
+    await runAdaptive(opts)
+    return
+  }
   if (opts.human + opts.naive + opts.jitter + opts.replay === 0) {
-    throw new Error('nothing to run; pass --human/--naive/--jitter/--replay counts or --accessibility')
+    throw new Error('nothing to run; pass --human/--naive/--jitter/--replay counts, --accessibility, or --adaptive N')
   }
   const csvPath = join(opts.out, 'sessions.csv')
   initCsv(csvPath)

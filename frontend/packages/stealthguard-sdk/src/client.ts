@@ -34,6 +34,8 @@ export class StealthGuardClient {
   readonly privacyMode: PrivacyMode
   readonly flushIntervalMs: number
   readonly maxEventsPerType: number
+  readonly autoInstrument: boolean
+  readonly selector: string
   readonly sdkVersion = '0.1.0'
 
   private readonly listeners = new Set<Listener>()
@@ -50,6 +52,9 @@ export class StealthGuardClient {
   private pasteEvents = 0
   private keylessFills = 0
   private focusedKeydowns = 0
+  private readonly instrumentedForms = new WeakSet<HTMLFormElement>()
+  private observer: MutationObserver | null = null
+  private instrumented = false
 
   constructor(options: StealthGuardOptions) {
     this.gatewayUrl = options.gatewayUrl.replace(/\/$/, '')
@@ -57,6 +62,8 @@ export class StealthGuardClient {
     this.privacyMode = options.privacyMode ?? 'raw'
     this.flushIntervalMs = options.flushIntervalMs ?? 2000
     this.maxEventsPerType = options.maxEventsPerType ?? 500
+    this.autoInstrument = options.autoInstrument ?? false
+    this.selector = options.selector ?? 'form'
     this._sessionId = options.sessionId ?? null
   }
 
@@ -94,9 +101,55 @@ export class StealthGuardClient {
     return this._sessionId!
   }
 
+  /** One-line entry point (Phase 9 B2): init() + auto-instrument matching
+   *  elements so a minimal integration is genuinely one line. */
+  async start(): Promise<string> {
+    const sessionId = await this.init()
+    if (this.autoInstrument && !this.instrumented) {
+      this.instrumented = true
+      this.observeForms()
+    }
+    return sessionId
+  }
+
   destroy(): void {
     this.detachListeners()
+    this.detachInstrumentation()
     if (this.timer !== null) clearInterval(this.timer)
+  }
+
+  private observeForms(): void {
+    this.instrumentForms(document.querySelectorAll(this.selector))
+    if (typeof MutationObserver !== 'undefined' && document.body) {
+      this.observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            if (node instanceof HTMLFormElement) this.instrumentForm(node)
+            else if (node instanceof Element) this.instrumentForms(node.querySelectorAll(this.selector))
+          }
+        }
+      })
+      this.observer.observe(document.body, { childList: true, subtree: true })
+    }
+  }
+
+  private instrumentForms(forms: NodeListOf<HTMLFormElement> | HTMLFormElement[]): void {
+    for (const form of forms) this.instrumentForm(form)
+  }
+
+  private instrumentForm(form: HTMLFormElement): void {
+    if (this.instrumentedForms.has(form)) return
+    this.instrumentedForms.add(form)
+    form.addEventListener('submit', this.onFormSubmit)
+  }
+
+  private detachInstrumentation(): void {
+    this.observer?.disconnect()
+    this.observer = null
+  }
+
+  private readonly onFormSubmit = (): void => {
+    void this.flush()
   }
 
   async flush(): Promise<Decision | null> {

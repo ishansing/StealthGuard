@@ -96,6 +96,17 @@ public class DecisionService {
             mlScore.modelVersion(), mlScore.reasonCodes());
     }
 
+    /** Persist a shadow-model score (Phase 9 A3) — logged only, never a decision. */
+    public void recordShadow(Session session, double score, String modelVersion) {
+        Score row = new Score();
+        row.setSession(session);
+        row.setHumannessScore(score);
+        row.setLabel(score >= defaultThresholds.human() ? "human" : score <= defaultThresholds.bot() ? "bot" : "uncertain");
+        row.setShadow(true);
+        row.setCreatedAt(Instant.now());
+        scoreRepository.save(row);
+    }
+
     /** Fail-safe: no ML score -> challenge, never allow (ADR 0005). */
     public DecisionResponse recordFailure(Session session, String reason, boolean trialMode, long latencyMs) {
         Decision decisionRow = new Decision();

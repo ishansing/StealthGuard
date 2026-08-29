@@ -37,7 +37,7 @@ class TelemetryServiceTest {
     void rawTelemetryComputesFeaturesThenScores() {
         Session session = newSession();
         when(sessionService.ensureFrom(any())).thenReturn(session);
-        when(mlClient.computeFeatures(any())).thenReturn(new MlServiceClient.FeatureResponse(Map.of("event_count", 1.0)));
+        when(mlClient.computeFeatures(any())).thenReturn(new MlServiceClient.FeatureResponse(Map.of("event_count", 1.0), null));
         when(mlClient.score(any(), any())).thenReturn(new MlServiceClient.ScoreDto(0.9, "human", "rule-based", List.of()));
         when(decisionService.record(eq(session), any(), any(), anyBoolean(), anyLong())).thenReturn(allowed());
         TelemetryService service = new TelemetryService(sessionService, eventRepo, mlClient, decisionService, false);
@@ -71,7 +71,7 @@ class TelemetryServiceTest {
     void mlFailureFailsSafeToChallenge() {
         Session session = newSession();
         when(sessionService.ensureFrom(any())).thenReturn(session);
-        when(mlClient.computeFeatures(any())).thenReturn(new MlServiceClient.FeatureResponse(Map.of("event_count", 1.0)));
+        when(mlClient.computeFeatures(any())).thenReturn(new MlServiceClient.FeatureResponse(Map.of("event_count", 1.0), null));
         when(mlClient.score(any(), any())).thenThrow(new MlUnavailableException("boom", null));
         when(decisionService.recordFailure(eq(session), any(), anyBoolean(), anyLong())).thenReturn(
             new DecisionResponse(UUID.randomUUID(), "challenge", null, null, List.of()));

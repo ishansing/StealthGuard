@@ -99,6 +99,22 @@ services:
       timeout: 5s
       retries: 10
 
+  sandbox:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    command: ["bun", "run", "dev:sandbox"]
+    ports:
+      - "5175:5175"
+    depends_on:
+      java-gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:5175/"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   pgdata:
   ml_models:

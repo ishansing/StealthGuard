@@ -28,6 +28,19 @@ lint:
 seed:
 	cd scripts/bot-sim && bun run seed --human 5 --naive 3 --jitter 2 --out out --demo http://localhost:5173 --gateway http://localhost:8080
 
+# Phase 9 A4: adversarial red-team loop — generate adaptive sessions against
+# the current model, report evasion, and fold into training if it exceeds 30%.
+redteam:
+	cd scripts/bot-sim && bun run seed --adaptive 8 --out out-redteam --gateway http://localhost:8080 --fold
+	$(COMPOSE) restart ml-service
+
+# Phase 9 A3: train the sequence-model shadow candidate + compare it to the active model.
+train-seq:
+	$(COMPOSE) run --rm -v ./scripts/bot-sim/out:/data:ro ml-service python -m training.train_seq --data /data/sessions.csv --output-dir /app/models
+
+compare-shadow:
+	$(COMPOSE) run --rm -v ./scripts:/scripts:ro -v ./scripts/bot-sim/out:/data:ro ml-service python /scripts/compare_shadow.py --data /data/sessions.csv --models-dir /app/models --out /tmp/compare-shadow.md
+
 # Phase 2/6: train + register a model from seeded data, then reload the ML service.
 train:
 	$(COMPOSE) run --rm -v ./scripts/bot-sim/out:/data:ro ml-service python -m training.train --data /data/sessions.csv --output-dir /app/models --version v1 --register-db

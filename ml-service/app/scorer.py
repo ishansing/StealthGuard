@@ -16,6 +16,8 @@ import numpy as np
 from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 
+from app.sequence import telemetry_to_sequence
+
 # Human-readable reason codes per feature, keyed by which way the
 # contribution pushed the score. "human" = pushed toward human-like,
 # "bot" = pushed toward bot-like.
@@ -297,6 +299,33 @@ class MLScorer(Scorer):
             model_version=self.version,
             reason_codes=top_reason_codes(contributions),
         )
+
+
+class SequenceShadowScorer:
+    """Lightweight sequence-model shadow candidate (Phase 9 A3).
+
+    Scores the raw event stream (not the feature vector) and is only ever
+    logged — never a decision — until evaluated against real traffic
+    (ADR-0009).
+    """
+
+    def __init__(self, model_path: str, metadata_path: str) -> None:
+        self.model = joblib.load(model_path)
+        with open(metadata_path) as fh:
+            meta = json.load(fh)
+        self.version = meta["version"]
+
+    def score(self, telemetry) -> float:
+        seq = telemetry_to_sequence(telemetry)
+        return float(self.model.predict_proba([seq])[0][1])
+
+
+def load_sequence_shadow(model_dir: str) -> SequenceShadowScorer | None:
+    model_path = os.path.join(model_dir, "model-v2-seq.pkl")
+    meta_path = os.path.join(model_dir, "metadata-v2-seq.json")
+    if os.path.exists(model_path) and os.path.exists(meta_path):
+        return SequenceShadowScorer(model_path, meta_path)
+    return None
 
 
 def load_scorer(

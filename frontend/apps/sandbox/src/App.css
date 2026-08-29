@@ -1,0 +1,107 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+h1 {
+  margin-bottom: 0.25rem;
+}
+
+.tagline {
+  color: #888;
+  margin-top: 0;
+}
+
+form {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+input {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #999;
+  border-radius: 6px;
+}
+
+button {
+  padding: 0.55rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rhythm {
+  position: relative;
+  height: 2rem;
+  margin: 1.5rem 0 0.5rem;
+  background: linear-gradient(to right, #b91c1c, #f59e0b, #16a34a);
+  border-radius: 6px;
+}
+
+.rhythm-marker {
+  position: absolute;
+  top: -0.4rem;
+  width: 0.35rem;
+  height: 2.8rem;
+  background: #fff;
+  border: 2px solid #111;
+  border-radius: 3px;
+  transform: translateX(-50%);
+  transition: left 0.4s ease;
+}
+
+.rhythm-label {
+  position: absolute;
+  top: 2.4rem;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.rhythm-label.left {
+  left: 0.25rem;
+}
+
+.rhythm-label.right {
+  right: 0.25rem;
+}
+
+.decision {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1.4rem;
+}
+
+.reasons {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.personas {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+}
+
+.persona-results p {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+}

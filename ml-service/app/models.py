@@ -19,8 +19,16 @@ class FeaturesRequest(BaseModel):
     signals: dict = {}
 
 
+class ShadowScore(BaseModel):
+    """Shadow-model output (Phase 9 A3) — logged, never a decision."""
+
+    score: float
+    model_version: str
+
+
 class FeaturesResponse(BaseModel):
     features: dict[str, float]
+    shadow: ShadowScore | None = None
 
 
 class ReasonCode(BaseModel):

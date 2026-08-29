@@ -22,6 +22,11 @@ export type Label = 'human' | 'bot'
 export type Persona = 'human' | 'naive' | 'jitter'
 export type AccessibilityPersona = 'screen-reader' | 'switch' | 'tremor'
 
+/** Red-team persona (Phase 9 A4): randomized jitter, pauses, non-uniform
+ *  digraph timing calibrated to just undercut the model's boundary. */
+export const ADAPTIVE_JITTER = 0.6
+export const ADAPTIVE_PAUSE_RATE = 0.2
+
 export interface SessionPlan {
   session_id: string
   label: Label
@@ -255,5 +260,46 @@ export function makeAccessibilityPlan(
       return switchPlan(sessionId)
     case 'tremor':
       return tremorPlan(sessionId, rng)
+  }
+}
+
+/**
+ * Adversarial red-team persona (Phase 9 A4). A scripted bot layered with
+ * randomized jitter, occasional pauses, and non-uniform digraph timing, tuned
+ * to score near the active model's decision boundary. Exists only to harden
+ * this project's own classifier; `test_adaptive_persona.py` guards that it
+ * stays statistically distinguishable from real recorded humans.
+ */
+export function adaptivePlan(
+  sessionId: string,
+  rng: () => number,
+  jitter: number = ADAPTIVE_JITTER,
+): SessionPlan {
+  const keystrokes: Keystroke[] = []
+  let t = 0
+  for (const key of TEXT) {
+    const hold = Math.max(0.04, 0.07 + (rng() - 0.5) * jitter * 0.08)
+    let inter = Math.max(0.03, 0.09 + (rng() - 0.5) * jitter * 0.1)
+    if (rng() < ADAPTIVE_PAUSE_RATE) inter += 0.3
+    keystrokes.push({ key, down_time: round3(t), up_time: round3(t + hold) })
+    t += hold + inter
+  }
+  const mouse_moves: Point[] = []
+  let x = 60
+  let y = 60
+  let mt = 0
+  for (let i = 0; i < 8; i++) {
+    mt += 0.09 + rng() * 0.12
+    x = clamp(x + 20 + (rng() - 0.5) * jitter * 30, 20, 520)
+    y = clamp(y + 14 + (rng() - 0.5) * jitter * 24, 20, 420)
+    mouse_moves.push({ x: round3(x), y: round3(y), t: round3(mt) })
+  }
+  return {
+    session_id: sessionId,
+    label: 'bot',
+    keystrokes,
+    mouse_moves,
+    touch_moves: [],
+    clicks: [{ x: 300, y: 400, t: round3(mt + 0.15) }],
   }
 }

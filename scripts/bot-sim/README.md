@@ -19,7 +19,23 @@ by `ml-service/training/train.py`) plus raw telemetry logs.
 | `human` | varied keystroke holds/intervals, occasional pauses, curved mouse path | human |
 | `naive` | perfectly uniform key intervals, straight-line mouse | bot |
 | `scripted-jitter` | uniform base + small noise, still separable from human variance | bot |
+| `adaptive` | randomized jitter, occasional pauses, non-uniform digraph timing calibrated to just undercut the current model's boundary | bot |
 | `replay` | replays a captured human session verbatim (direct telemetry POST — tests replay defenses, not evasion) | human |
+| `screen-reader` / `switch` / `tremor` | accessibility personas (must never resolve to `block`) | human |
+
+## Red-team loop (Phase 9 A4)
+
+```bash
+make redteam    # 8 adaptive sessions vs the current model, reports evasion,
+                # folds into training if evasion exceeds 30%, then retrains
+```
+
+The `adaptive` persona is regenerated per run against whatever model is
+currently active, and `test_adaptive_persona.py` guarantees it stays
+statistically distinguishable from real recorded human variance — so folding
+its data back into training hardens the model against evaders without training
+it to reject real humans. This persona exists only to harden this project's own
+classifier, consistent with the ethical-scope note above.
 
 ## Usage
 

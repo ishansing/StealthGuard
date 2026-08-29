@@ -19,9 +19,10 @@ from app.models import (
     ReasonCode,
     ScoreRequest,
     ScoreResponse,
+    ShadowScore,
 )
 from app.pii import contains_pii
-from app.scorer import Scorer, ScoreResult, load_scorer
+from app.scorer import Scorer, ScoreResult, SequenceShadowScorer, load_scorer, load_sequence_shadow
 
 logger = logging.getLogger(__name__)
 
@@ -67,9 +68,14 @@ async def lifespan(app: FastAPI):
         settings.model_version_shadow,
         settings.modality_thresholds,
     )
+    app.state.seq_shadow = (
+        load_sequence_shadow(settings.model_dir) if settings.model_version_shadow == "seq" else None
+    )
     app.state.loaded_at = datetime.now(UTC).isoformat()
     if app.state.shadow_scorer is not None:
         logger.info("shadow scorer loaded: %s", settings.model_version_shadow)
+    if app.state.seq_shadow is not None:
+        logger.info("sequence shadow loaded: %s", app.state.seq_shadow.version)
     yield
 
 
@@ -114,6 +120,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         shadow = None
         if app.state.shadow_scorer is not None:
             shadow = app.state.settings.model_version_shadow
+        elif app.state.seq_shadow is not None:
+            shadow = app.state.seq_shadow.version
         return ModelVersionResponse(active=active, shadow=shadow)
 
     @app.post(
@@ -151,7 +159,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     def features(req: FeaturesRequest) -> FeaturesResponse:
         """Compute the canonical feature vector from raw telemetry (§6.2)."""
-        return FeaturesResponse(features=compute_features(req.model_dump()))
+        raw = req.model_dump()
+        shadow: ShadowScore | None = None
+        seq_shadow: SequenceShadowScorer | None = app.state.seq_shadow
+        if seq_shadow is not None:
+            score = seq_shadow.score(raw)
+            shadow = ShadowScore(score=round(score, 4), model_version=seq_shadow.version)
+        return FeaturesResponse(features=compute_features(raw), shadow=shadow)
 
     return app
 

@@ -35,7 +35,14 @@ public class MlServiceClient {
         this.webClient = WebClient.builder().build();
     }
 
-    public record FeatureResponse(Map<String, Double> features) {
+    public record FeatureResponse(
+        Map<String, Double> features,
+        @com.fasterxml.jackson.annotation.JsonProperty("shadow") ShadowDto shadow) {
+
+        public record ShadowDto(
+            @com.fasterxml.jackson.annotation.JsonProperty("score") double score,
+            @com.fasterxml.jackson.annotation.JsonProperty("model_version") String modelVersion) {
+        }
     }
 
     public record ScoreDto(
