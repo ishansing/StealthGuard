@@ -26,7 +26,7 @@ lint:
 
 # Phase 6: bot simulator + human session recorder (writes CSV + populates DB).
 seed:
-	cd scripts/bot-sim && bun run seed --human 5 --naive 3 --jitter 2 --out out --demo http://localhost:5173 --gateway http://localhost:8080
+	cd scripts/bot-sim && bun run seed --human 12 --naive 4 --jitter 4 --out out --demo http://localhost:5173 --gateway http://localhost:8080
 
 # Phase 9 A4: adversarial red-team loop — generate adaptive sessions against
 # the current model, report evasion, and fold into training if it exceeds 30%.
