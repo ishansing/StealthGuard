@@ -16,6 +16,7 @@ dependencies = [
     "pandas",
     "joblib",
     "psycopg[binary]",
+    "prometheus-fastapi-instrumentator",
 ]
 
 [project.optional-dependencies]

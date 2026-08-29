@@ -11,6 +11,13 @@ demo with one command (`make demo`).
 
 ### Added
 
+- **Observability** — structured session-correlated JSON logging (Logback JSON
+  encoder + ML-service JSON formatter, carrying `session_id`/`latency_ms`),
+  Prometheus metrics on both backends, an optional Prometheus + Grafana overlay
+  (`make observability`) with a provisioned dashboard, and a tuning loop
+  (`make retrain`) that folds reviewer feedback into training and reports
+  active-vs-shadow model agreement.
+
 - **Frontend SDK (`@stealthguard/sdk`)** — framework-agnostic telemetry client
   (keystroke/pointer/touch capture, bounded buffers, debounced flush +
   sendBeacon), `aggregated` privacy mode, `useStealthGuard` React hook, built
@@ -44,7 +51,7 @@ demo with one command (`make demo`).
 ### Notes
 
 - Local-sandbox reference build; not production-hardened (see SPEC §1).
-- HMAC telemetry signing, per-session rate limiting, and observability stack
-  remain as documented stretch items.
+- HMAC telemetry signing and per-session rate limiting remain as documented
+  stretch items.
 
 [1.0.0]: https://example.invalid/stealthguard/tree/v1.0.0

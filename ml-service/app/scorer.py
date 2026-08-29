@@ -214,7 +214,9 @@ def load_scorer(
             model_type = json.load(fh).get("model_type")
         explainer = None
         if model_type == "random_forest":
-            explainer = os.path.join(model_dir, "explainer.pkl")
+            # "model.pkl" -> "explainer.pkl"; "model-v2.pkl" -> "explainer-v2.pkl"
+            stem = os.path.basename(path)[: -len(".pkl")]
+            explainer = os.path.join(os.path.dirname(path), stem.replace("model", "explainer", 1) + ".pkl")
         return MLScorer(path, meta, human_threshold, bot_threshold, explainer)
 
     active: Scorer

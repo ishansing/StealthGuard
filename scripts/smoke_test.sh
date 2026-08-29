@@ -69,4 +69,11 @@ curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/score \
   -d '{"session_id":"x","features":{"keystroke_std_hold_ms":1.0}}' | grep -q 200 \
   && echo "OK   ml /score" || { echo "FAIL ml /score"; exit 1; }
 
+# --- metrics endpoints (Phase 8) ---
+curl -s http://localhost:8080/actuator/prometheus | grep -q "http_server_requests_seconds" \
+  && echo "OK   gateway /actuator/prometheus" || { echo "FAIL gateway prometheus"; exit 1; }
+
+curl -s http://localhost:8000/metrics | grep -q "http_requests_total" \
+  && echo "OK   ml /metrics" || { echo "FAIL ml metrics"; exit 1; }
+
 echo "All services healthy."

@@ -189,7 +189,6 @@ def main() -> None:
         const=os.environ.get("DB_URL"),
         default=None,
         help="Postgres URL to register the model (defaults to DB_URL)",
-
     )
     args = parser.parse_args()
 

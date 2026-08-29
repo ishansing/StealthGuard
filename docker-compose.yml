@@ -25,6 +25,7 @@ services:
       MODEL_DIR: ${MODEL_DIR:-/app/models}
       HUMAN_THRESHOLD: ${HUMAN_THRESHOLD:-0.8}
       BOT_THRESHOLD: ${BOT_THRESHOLD:-0.4}
+      MODEL_VERSION_SHADOW: ${MODEL_VERSION_SHADOW:-}
       DB_URL: postgresql://${POSTGRES_USER:-stealthguard}:${POSTGRES_PASSWORD:-stealthguard_dev}@db:5432/${POSTGRES_DB:-stealthguard}
     volumes:
       - ml_models:/app/models
@@ -39,7 +40,7 @@ services:
       timeout: 5s
       retries: 10
 
-  java_gateway:
+  java-gateway:
     build:
       context: .
       dockerfile: java-gateway/Dockerfile
@@ -73,7 +74,7 @@ services:
     ports:
       - "5173:5173"
     depends_on:
-      java_gateway:
+      java-gateway:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:5173/"]
@@ -89,7 +90,7 @@ services:
     ports:
       - "5174:5174"
     depends_on:
-      java_gateway:
+      java-gateway:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:5174/"]

@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.logstash.logback.marker.Markers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -44,22 +45,38 @@ public class TelemetryService {
 
     @Transactional
     public DecisionResponse ingest(TelemetryRequest request) {
+        long start = System.nanoTime();
         Session session = sessionService.ensureFrom(request);
         if (request.meta() != null) {
             sessionService.applyMeta(session, request.meta());
         }
         persistEvents(session, request);
 
+        DecisionResponse response;
         try {
             Map<String, Double> features = resolveFeatures(request);
             MlServiceClient.ScoreDto score = mlClient.score(request.sessionId().toString(), features);
-            return decisionService.record(session, score);
+            response = decisionService.record(session, score);
         } catch (RuntimeException e) {
             // Fail-safe boundary (ADR 0005): any ML path failure (timeout, retry
             // exhaustion, open circuit breaker) degrades to challenge, never allow.
             log.warn("session {} failing safe to challenge: {}", request.sessionId(), e.getMessage());
-            return decisionService.recordFailure(session, "ml-service unavailable");
+            response = decisionService.recordFailure(session, "ml-service unavailable");
         }
+        long latencyMs = (System.nanoTime() - start) / 1_000_000;
+        log.info("telemetry processed",
+            Markers.append("session_id", request.sessionId().toString()),
+            Markers.append("latency_ms", latencyMs),
+            Markers.append("decision", response.decision()),
+            Markers.append("events", totalEvents(request)));
+        return response;
+    }
+
+    private long totalEvents(TelemetryRequest request) {
+        return (request.keystrokes() == null ? 0 : request.keystrokes().size())
+            + (request.mouseMoves() == null ? 0 : request.mouseMoves().size())
+            + (request.touchMoves() == null ? 0 : request.touchMoves().size())
+            + (request.clicks() == null ? 0 : request.clicks().size());
     }
 
     private Map<String, Double> resolveFeatures(TelemetryRequest request) {

@@ -2,10 +2,12 @@
 
 import json
 import logging
+import time
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 from fastapi import Depends, FastAPI, HTTPException, Request
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.config import Settings, get_settings
 from app.features import compute_features
@@ -22,6 +24,37 @@ from app.pii import contains_pii
 from app.scorer import Scorer, ScoreResult, load_scorer
 
 logger = logging.getLogger(__name__)
+
+
+class JsonFormatter(logging.Formatter):
+    """Emit each record as one JSON object; sg_-prefixed extras become fields."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload: dict = {
+            "ts": round(time.time(), 3),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        for key, value in record.__dict__.items():
+            if key.startswith("sg_"):
+                payload[key[3:]] = value
+        return json.dumps(payload)
+
+
+def setup_json_logging() -> None:
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    if not root.handlers:
+        root.addHandler(logging.StreamHandler())
+    for handler in root.handlers:
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(JsonFormatter())
+
+
+def _structured(level: str, message: str, **fields) -> None:
+    log = getattr(logger, level)
+    log(message, extra={"sg_" + k: v for k, v in fields.items()})
 
 
 @asynccontextmanager
@@ -42,6 +75,8 @@ async def lifespan(app: FastAPI):
 def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="StealthGuard ML Service", version="0.1.0", lifespan=lifespan)
     app.state.settings = settings or get_settings()
+    setup_json_logging()
+    Instrumentator().instrument(app).expose(app)
 
     async def pii_guard(request: Request) -> None:
         try:
@@ -86,14 +121,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def score(req: ScoreRequest) -> ScoreResponse:
         scorer: Scorer = app.state.scorer
         result = scorer.score(req.features)
+        started = time.perf_counter()
         if app.state.shadow_scorer is not None:
             shadow_result = app.state.shadow_scorer.score(req.features)
-            logger.info(
-                "shadow session_id=%s score=%s model_version=%s",
-                req.session_id,
-                shadow_result.humanness_score,
-                shadow_result.model_version,
+            _structured(
+                "info",
+                "shadow score",
+                session_id=req.session_id,
+                score=shadow_result.humanness_score,
+                model_version=shadow_result.model_version,
             )
+        latency_ms = round((time.perf_counter() - started) * 1000, 2)
+        _structured(
+            "info",
+            "score",
+            session_id=req.session_id,
+            latency_ms=latency_ms,
+            score=result.humanness_score,
+            model_version=result.model_version,
+        )
         return _result_to_response(result, req.session_id)
 
     @app.post(

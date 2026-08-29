@@ -21,6 +21,7 @@
     <java.version>21</java.version>
     <springdoc.version>2.8.6</springdoc.version>
     <resilience4j.version>2.3.0</resilience4j.version>
+    <logstash.version>8.1</logstash.version>
     <!-- Newer Testcontainers negotiates the Docker API version; the Boot-managed
          version hardcodes API 1.32, which Docker >= 29 rejects. -->
     <testcontainers.version>1.21.3</testcontainers.version>
@@ -51,6 +52,15 @@
       <groupId>io.github.resilience4j</groupId>
       <artifactId>resilience4j-spring-boot3</artifactId>
       <version>${resilience4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.logstash.logback</groupId>
+      <artifactId>logstash-logback-encoder</artifactId>
+      <version>${logstash.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>
