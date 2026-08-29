@@ -53,6 +53,25 @@ jobs:
       - name: Persona sanity tests
         run: bun run test
 
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start the stack
+        run: make up
+      - name: Seed and train
+        run: make seed && make train
+      - name: Smoke
+        run: ./scripts/smoke_test.sh
+      - name: Playwright browsers
+        working-directory: frontend
+        run: |
+          bun install
+          bunx playwright install --with-deps chromium
+      - name: End-to-end tests
+        working-directory: frontend
+        run: bun run test:e2e
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
