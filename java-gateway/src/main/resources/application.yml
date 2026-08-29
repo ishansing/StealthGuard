@@ -29,6 +29,14 @@ stealthguard:
   ml-timeout: ${ML_TIMEOUT:2s}
   human-allow-threshold: ${HUMAN_ALLOW_THRESHOLD:0.8}
   bot-block-threshold: ${BOT_BLOCK_THRESHOLD:0.4}
+  # Per-modality profiles (Phase 9 A5): lenient for assistive flows so
+  # keyboard-only / switch / touch users are never silently blocked.
+  human-allow-threshold-keyboard: ${HUMAN_ALLOW_THRESHOLD_KEYBOARD:0.6}
+  bot-block-threshold-keyboard: ${BOT_BLOCK_THRESHOLD_KEYBOARD:0.2}
+  human-allow-threshold-touch: ${HUMAN_ALLOW_THRESHOLD_TOUCH:0.7}
+  bot-block-threshold-touch: ${BOT_BLOCK_THRESHOLD_TOUCH:0.3}
+  human-allow-threshold-switch: ${HUMAN_ALLOW_THRESHOLD_SWITCH:0.5}
+  bot-block-threshold-switch: ${BOT_BLOCK_THRESHOLD_SWITCH:0.0}
   max-events-per-array: ${MAX_EVENTS_PER_ARRAY:5000}
   hmac-enabled: ${HMAC_ENABLED:false}
   challenge-answer: ${CHALLENGE_ANSWER:4}

@@ -2,7 +2,14 @@ import { join } from 'node:path'
 
 import { appendPlanToCsv, initCsv, writeRawLog } from './csv'
 import { openBrowser, driveSession } from './driver'
-import { makePlan, seededRng, type Persona, type SessionPlan } from './personas'
+import {
+  makeAccessibilityPlan,
+  makePlan,
+  seededRng,
+  type AccessibilityPersona,
+  type Persona,
+  type SessionPlan,
+} from './personas'
 
 /**
  * Bot Behavior Simulator (SPEC §15 Phase 6). Generates persona event plans,
@@ -23,10 +30,11 @@ interface Options {
   demo: string
   gateway: string
   seed: number
+  accessibility: boolean
 }
 
 function parseArgs(argv: string[]): Options {
-  const opts: Options = { human: 0, naive: 0, jitter: 0, replay: 0, out: 'out', demo: 'http://localhost:5173', gateway: 'http://localhost:8080', seed: 42 }
+  const opts: Options = { human: 0, naive: 0, jitter: 0, replay: 0, out: 'out', demo: 'http://localhost:5173', gateway: 'http://localhost:8080', seed: 42, accessibility: false }
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i]
     const value = (): string => {
@@ -44,6 +52,7 @@ function parseArgs(argv: string[]): Options {
       case '--demo': opts.demo = value(); break
       case '--gateway': opts.gateway = value(); break
       case '--seed': opts.seed = Number(value()); break
+      case '--accessibility': opts.accessibility = true; break
       default: throw new Error(`unknown flag ${flag}`)
     }
   }
@@ -61,7 +70,7 @@ async function initGatewaySession(gateway: string): Promise<string> {
   return body.session_id
 }
 
-async function postTelemetry(gateway: string, sessionId: string, plan: SessionPlan): Promise<void> {
+async function postTelemetry(gateway: string, sessionId: string, plan: SessionPlan): Promise<string> {
   const res = await fetch(`${gateway}/stealthguard/telemetry`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -73,15 +82,34 @@ async function postTelemetry(gateway: string, sessionId: string, plan: SessionPl
       mouse_moves: plan.mouse_moves,
       touch_moves: plan.touch_moves,
       clicks: plan.clicks,
+      signals: plan.signals,
+      meta: { input_modality: plan.signals?.input_modality },
     }),
   })
   if (!res.ok) throw new Error(`telemetry failed: ${res.status}`)
+  const body = (await res.json()) as { decision?: string }
+  return body.decision ?? ''
+}
+
+async function runAccessibility(opts: Options): Promise<void> {
+  const personas: AccessibilityPersona[] = ['screen-reader', 'switch', 'tremor']
+  for (const persona of personas) {
+    const rng = seededRng(opts.seed + 777)
+    const plan = makeAccessibilityPlan(persona, `a11y-${persona}`, rng)
+    const gatewaySession = await initGatewaySession(opts.gateway)
+    const decision = await postTelemetry(opts.gateway, gatewaySession, plan)
+    console.log(`${plan.session_id} [${persona}] -> ${decision}`)
+  }
 }
 
 async function main(): Promise<void> {
   const opts = parseArgs(process.argv.slice(2))
+  if (opts.accessibility) {
+    await runAccessibility(opts)
+    return
+  }
   if (opts.human + opts.naive + opts.jitter + opts.replay === 0) {
-    throw new Error('nothing to run; pass --human/--naive/--jitter/--replay counts')
+    throw new Error('nothing to run; pass --human/--naive/--jitter/--replay counts or --accessibility')
   }
   const csvPath = join(opts.out, 'sessions.csv')
   initCsv(csvPath)

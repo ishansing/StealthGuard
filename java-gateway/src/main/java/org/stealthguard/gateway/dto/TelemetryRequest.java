@@ -19,6 +19,7 @@ public record TelemetryRequest(
     @jakarta.validation.constraints.Size(max = 5000) List<MouseMoveDto> touchMoves,
     @jakarta.validation.constraints.Size(max = 5000) List<MouseMoveDto> clicks,
     Map<String, Double> features,
+    Map<String, Object> signals,
     MetaDto meta
 ) {
 

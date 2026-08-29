@@ -56,7 +56,7 @@ public class TelemetryService {
         try {
             Map<String, Double> features = resolveFeatures(request);
             MlServiceClient.ScoreDto score = mlClient.score(request.sessionId().toString(), features);
-            response = decisionService.record(session, score);
+            response = decisionService.record(session, score, modalityOf(request));
         } catch (RuntimeException e) {
             // Fail-safe boundary (ADR 0005): any ML path failure (timeout, retry
             // exhaustion, open circuit breaker) degrades to challenge, never allow.
@@ -70,6 +70,10 @@ public class TelemetryService {
             Markers.append("decision", response.decision()),
             Markers.append("events", totalEvents(request)));
         return response;
+    }
+
+    private String modalityOf(TelemetryRequest request) {
+        return request.meta() == null ? null : request.meta().inputModality();
     }
 
     private long totalEvents(TelemetryRequest request) {
@@ -132,7 +136,8 @@ public class TelemetryService {
             "keystrokes", keys,
             "mouse_moves", rawPoints(request.mouseMoves()),
             "touch_moves", rawPoints(request.touchMoves()),
-            "clicks", rawPoints(request.clicks()));
+            "clicks", rawPoints(request.clicks()),
+            "signals", request.signals() == null ? Map.of() : request.signals());
     }
 
     private List<Map<String, Object>> rawPoints(List<TelemetryRequest.MouseMoveDto> moves) {

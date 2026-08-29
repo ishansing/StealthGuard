@@ -37,7 +37,7 @@ class TelemetryServiceTest {
         when(sessionService.ensureFrom(any())).thenReturn(session);
         when(mlClient.computeFeatures(any())).thenReturn(new MlServiceClient.FeatureResponse(Map.of("event_count", 1.0)));
         when(mlClient.score(any(), any())).thenReturn(new MlServiceClient.ScoreDto(0.9, "human", "rule-based", List.of()));
-        when(decisionService.record(eq(session), any())).thenReturn(allowed());
+        when(decisionService.record(eq(session), any(), any())).thenReturn(allowed());
         TelemetryService service = new TelemetryService(sessionService, eventRepo, mlClient, decisionService);
 
         DecisionResponse response = service.ingest(rawRequest());
@@ -45,7 +45,7 @@ class TelemetryServiceTest {
         assertEquals("allow", response.decision());
         verify(mlClient).computeFeatures(any());
         verify(mlClient).score(any(), any());
-        verify(decisionService).record(eq(session), any());
+        verify(decisionService).record(eq(session), any(), any());
     }
 
     @Test
@@ -53,12 +53,12 @@ class TelemetryServiceTest {
         Session session = newSession();
         when(sessionService.ensureFrom(any())).thenReturn(session);
         when(mlClient.score(any(), any())).thenReturn(new MlServiceClient.ScoreDto(0.9, "human", "rule-based", List.of()));
-        when(decisionService.record(eq(session), any())).thenReturn(allowed());
+        when(decisionService.record(eq(session), any(), any())).thenReturn(allowed());
         TelemetryService service = new TelemetryService(sessionService, eventRepo, mlClient, decisionService);
 
         TelemetryRequest request = new TelemetryRequest(
             UUID.randomUUID(), "/login", Instant.now(), null, "aggregated",
-            List.of(), List.of(), List.of(), List.of(), Map.of("event_count", 2.0), null);
+            List.of(), List.of(), List.of(), List.of(), Map.of("event_count", 2.0), null, null);
         service.ingest(request);
 
         verify(mlClient, never()).computeFeatures(any());
@@ -90,7 +90,7 @@ class TelemetryServiceTest {
             UUID.randomUUID(), "/login", Instant.now(), "0.1.0", "raw",
             List.of(new TelemetryRequest.KeystrokeDto("a", 1.0, 1.1)),
             List.of(new TelemetryRequest.MouseMoveDto(1.0, 2.0, 3.0)),
-            List.of(), List.of(), null, null);
+            List.of(), List.of(), null, null, null);
     }
 
     private Session newSession() {

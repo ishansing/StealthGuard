@@ -92,6 +92,11 @@ describe('StealthGuardClient', () => {
     expect(body.session_id).toBe('s-1')
     expect(body.privacy_mode).toBe('raw')
     expect(body.sdk_version).toBeDefined()
+    expect(body.signals).toEqual({
+      paste_events: 0,
+      keyless_fills: 0,
+      input_modality: 'mouse',
+    })
     expect(body.meta.input_modality).toBe('mouse')
     expect(body.meta.viewport_width).toBeGreaterThan(0)
     expect(body.keystrokes).toHaveLength(1)
@@ -146,5 +151,20 @@ describe('StealthGuardClient', () => {
       response: '4',
     })
     expect(result?.decision).toBe('allow')
+  })
+
+  it('captures paste and keyless (autofill) signals', async () => {
+    const fetchMock = mockFetch()
+    const client = new StealthGuardClient({ gatewayUrl: 'http://gw', flushIntervalMs: 0, sessionId: 's-1' })
+    await client.init()
+
+    document.dispatchEvent(new Event('paste'))
+    document.dispatchEvent(new FocusEvent('focusin'))
+    document.dispatchEvent(new FocusEvent('focusout'))
+
+    await client.flush()
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string)
+    expect(body.signals.paste_events).toBe(1)
+    expect(body.signals.keyless_fills).toBe(1)
   })
 })

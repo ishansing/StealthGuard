@@ -41,6 +41,18 @@ LABEL_DICT: dict[str, dict[str, str]] = {
     },
     "session_duration_ms": {"human": "natural_session_length", "bot": "abbreviated_session"},
     "event_count": {"human": "natural_event_volume", "bot": "sparse_event_volume"},
+    "fitts_fit_error_ms": {"human": "fitts_conformant_movement", "bot": "non_conformant_movement"},
+    "arrival_to_click_latency_ms": {"human": "natural_click_pause", "bot": "instant_click"},
+    "micro_tremor_px_per_s2": {"human": "natural_micro_tremor", "bot": "no_micro_tremor"},
+    "digraph_mean_latency_ms": {
+        "human": "natural_digraph_timing",
+        "bot": "abnormal_digraph_timing",
+    },
+    "digraph_std_latency_ms": {"human": "natural_typing_rhythm", "bot": "uniform_keystroke_rhythm"},
+    "paste_event_count": {"human": "natural_input_behavior", "bot": "no_paste"},
+    "keyless_fill_count": {"human": "natural_input_behavior", "bot": "keyless_fill"},
+    "input_modality": {"human": "natural_input_modality", "bot": "unexpected_modality"},
+    "keystroke_share": {"human": "natural_input_mix", "bot": "unusual_input_mix"},
 }
 
 
@@ -68,6 +80,19 @@ def label_for_score(score: float, human_threshold: float, bot_threshold: float) 
     if score <= bot_threshold:
         return "bot"
     return "uncertain"
+
+
+MODALITY_NAMES = {0: "mouse", 1: "keyboard", 2: "touch", 3: "switch"}
+
+
+def thresholds_for_features(
+    features: dict[str, float],
+    default: tuple[float, float],
+    per_modality: dict[str, tuple[float, float]],
+) -> tuple[float, float]:
+    """Pick (human, bot) label thresholds by the features' input_modality."""
+    modality = MODALITY_NAMES.get(int(features.get("input_modality", 0)), "mouse")
+    return per_modality.get(modality, default)
 
 
 def top_reason_codes(contributions: dict[str, float]) -> list[ReasonCode]:
@@ -114,13 +139,30 @@ class RuleBasedScorer(Scorer):
         "mouse_direction_changes": (12.0, 8.0, 1, 1.0),
         "session_duration_ms": (5200.0, 3000.0, 1, 0.3),
         "event_count": (145.0, 100.0, 1, 0.3),
+        # Phase 9 A1: richer features.
+        "fitts_fit_error_ms": (50.0, 40.0, -1, 0.5),
+        "arrival_to_click_latency_ms": (200.0, 150.0, 1, 0.3),
+        "micro_tremor_px_per_s2": (150.0, 120.0, 1, 0.6),
+        "digraph_mean_latency_ms": (150.0, 50.0, 1, 0.3),
+        "digraph_std_latency_ms": (25.0, 18.0, 1, 0.8),
+        "paste_event_count": (0.2, 0.4, 1, 0.2),
+        "keyless_fill_count": (0.1, 0.3, 1, 0.2),
+        # Phase 9 A5: modality context is neutral in the baseline — the
+        # per-modality threshold profiles handle accessibility, not the score.
+        "input_modality": (0.0, 1.0, 1, 0.0),
+        "keystroke_share": (0.5, 0.3, 1, 0.0),
     }
 
     def __init__(
-        self, human_threshold: float, bot_threshold: float, model_version: str = "rule-based"
+        self,
+        human_threshold: float,
+        bot_threshold: float,
+        model_version: str = "rule-based",
+        modality_thresholds: dict[str, tuple[float, float]] | None = None,
     ) -> None:
         self.human_threshold = human_threshold
         self.bot_threshold = bot_threshold
+        self.modality_thresholds = modality_thresholds or {}
         self.version = model_version
         self.model_version = model_version
 
@@ -139,9 +181,12 @@ class RuleBasedScorer(Scorer):
     def score(self, features: dict[str, float]) -> ScoreResult:
         logit, contributions = self._logit(features)
         humanness = sigmoid(logit)
+        human_t, bot_t = thresholds_for_features(
+            features, (self.human_threshold, self.bot_threshold), self.modality_thresholds
+        )
         return ScoreResult(
             humanness_score=round(humanness, 4),
-            label=label_for_score(humanness, self.human_threshold, self.bot_threshold),
+            label=label_for_score(humanness, human_t, bot_t),
             model_version=self.model_version,
             reason_codes=top_reason_codes(contributions),
         )
@@ -157,6 +202,7 @@ class MLScorer(Scorer):
         human_threshold: float,
         bot_threshold: float,
         explainer_path: str | None = None,
+        modality_thresholds: dict[str, tuple[float, float]] | None = None,
     ) -> None:
         self.model = joblib.load(model_path)
         with open(metadata_path) as fh:
@@ -167,6 +213,7 @@ class MLScorer(Scorer):
         self.stds = {f: float(v) for f, v in meta["stds"].items()}
         self.human_threshold = human_threshold
         self.bot_threshold = bot_threshold
+        self.modality_thresholds = modality_thresholds or {}
 
         if meta.get("model_type") == "logistic":
             self.coefficients = self.model.coef_[0]
@@ -191,9 +238,12 @@ class MLScorer(Scorer):
         contributions = {
             f: float(c * zi) for f, c, zi in zip(self.feature_list, self.coefficients, z)
         }
+        human_t, bot_t = thresholds_for_features(
+            features, (self.human_threshold, self.bot_threshold), self.modality_thresholds
+        )
         return ScoreResult(
             humanness_score=round(humanness, 4),
-            label=label_for_score(humanness, self.human_threshold, self.bot_threshold),
+            label=label_for_score(humanness, human_t, bot_t),
             model_version=self.version,
             reason_codes=top_reason_codes(contributions),
         )
@@ -204,6 +254,7 @@ def load_scorer(
     human_threshold: float,
     bot_threshold: float,
     shadow_version: str | None = None,
+    modality_thresholds: dict[str, tuple[float, float]] | None = None,
 ) -> tuple[Scorer, Scorer | None]:
     """Load the active scorer (and optional shadow scorer) from MODEL_DIR."""
     model_path = os.path.join(model_dir, "model.pkl")
@@ -216,14 +267,18 @@ def load_scorer(
         if model_type == "random_forest":
             # "model.pkl" -> "explainer.pkl"; "model-v2.pkl" -> "explainer-v2.pkl"
             stem = os.path.basename(path)[: -len(".pkl")]
-            explainer = os.path.join(os.path.dirname(path), stem.replace("model", "explainer", 1) + ".pkl")
-        return MLScorer(path, meta, human_threshold, bot_threshold, explainer)
+            explainer = os.path.join(
+                os.path.dirname(path), stem.replace("model", "explainer", 1) + ".pkl"
+            )
+        return MLScorer(path, meta, human_threshold, bot_threshold, explainer, modality_thresholds)
 
     active: Scorer
     if os.path.exists(model_path) and os.path.exists(metadata_path):
         active = _build(model_path, metadata_path)
     else:
-        active = RuleBasedScorer(human_threshold, bot_threshold)
+        active = RuleBasedScorer(
+            human_threshold, bot_threshold, modality_thresholds=modality_thresholds
+        )
 
     shadow: Scorer | None = None
     if shadow_version:

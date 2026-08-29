@@ -65,6 +65,7 @@ async def lifespan(app: FastAPI):
         settings.human_threshold,
         settings.bot_threshold,
         settings.model_version_shadow,
+        settings.modality_thresholds,
     )
     app.state.loaded_at = datetime.now(UTC).isoformat()
     if app.state.shadow_scorer is not None:
