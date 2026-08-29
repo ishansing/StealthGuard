@@ -3,3 +3,4 @@ dist
 build
 playwright-report
 test-results
+packages/stealthguard-sdk/docs/api-reference
