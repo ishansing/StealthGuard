@@ -70,7 +70,8 @@ public class DecisionService {
         return "challenge";
     }
 
-    public DecisionResponse record(Session session, MlServiceClient.ScoreDto mlScore, String modality) {
+    public DecisionResponse record(Session session, MlServiceClient.ScoreDto mlScore, String modality,
+        boolean trialMode, long latencyMs) {
         Score score = new Score();
         score.setSession(session);
         score.setHumannessScore(mlScore.humannessScore());
@@ -86,6 +87,8 @@ public class DecisionService {
         decisionRow.setDecision(decision);
         decisionRow.setReason("score=" + mlScore.humannessScore() + " model=" + mlScore.modelVersion()
             + " modality=" + (modality == null ? "?" : modality));
+        decisionRow.setTrialMode(trialMode);
+        decisionRow.setLatencyMs((int) latencyMs);
         decisionRow.setCreatedAt(Instant.now());
         decisionRepository.save(decisionRow);
 
@@ -94,11 +97,13 @@ public class DecisionService {
     }
 
     /** Fail-safe: no ML score -> challenge, never allow (ADR 0005). */
-    public DecisionResponse recordFailure(Session session, String reason) {
+    public DecisionResponse recordFailure(Session session, String reason, boolean trialMode, long latencyMs) {
         Decision decisionRow = new Decision();
         decisionRow.setSession(session);
         decisionRow.setDecision("challenge");
         decisionRow.setReason(reason);
+        decisionRow.setTrialMode(trialMode);
+        decisionRow.setLatencyMs((int) latencyMs);
         decisionRow.setCreatedAt(Instant.now());
         decisionRepository.save(decisionRow);
         return toResponse(session.getId(), "challenge", null, null, List.of());

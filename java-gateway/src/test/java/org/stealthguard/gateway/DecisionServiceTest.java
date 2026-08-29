@@ -64,7 +64,7 @@ class DecisionServiceTest {
         Session session = newSession();
 
         var response = service.record(
-            session, new MlServiceClient.ScoreDto(0.87, "human", "v1", List.of()), "mouse");
+            session, new MlServiceClient.ScoreDto(0.87, "human", "v1", List.of()), "mouse", false, 42L);
 
         assertEquals("allow", response.decision());
         assertEquals(0.87, response.humannessScore());
@@ -80,7 +80,7 @@ class DecisionServiceTest {
             scores, decisions, 0.8, 0.4, 0.6, 0.2, 0.7, 0.3, 0.5, 0.0);
         Session session = newSession();
 
-        var response = service.recordFailure(session, "ml-service unreachable");
+        var response = service.recordFailure(session, "ml-service unreachable", false, 42L);
 
         assertEquals("challenge", response.decision());
         assertEquals(null, response.humannessScore());

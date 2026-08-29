@@ -53,6 +53,7 @@ services:
       BOT_BLOCK_THRESHOLD: ${BOT_BLOCK_THRESHOLD:-0.4}
       MAX_EVENTS_PER_ARRAY: ${MAX_EVENTS_PER_ARRAY:-5000}
       HMAC_ENABLED: ${HMAC_ENABLED:-false}
+      TRIAL_MODE: ${TRIAL_MODE:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
       - "8080:8080"

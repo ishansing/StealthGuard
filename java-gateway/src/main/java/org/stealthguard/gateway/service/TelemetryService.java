@@ -31,16 +31,19 @@ public class TelemetryService {
     private final TelemetryEventRepository eventRepository;
     private final MlServiceClient mlClient;
     private final DecisionService decisionService;
+    private final boolean trialMode;
 
     public TelemetryService(
         SessionService sessionService,
         TelemetryEventRepository eventRepository,
         MlServiceClient mlClient,
-        DecisionService decisionService) {
+        DecisionService decisionService,
+        @org.springframework.beans.factory.annotation.Value("${stealthguard.trial-mode:false}") boolean trialMode) {
         this.sessionService = sessionService;
         this.eventRepository = eventRepository;
         this.mlClient = mlClient;
         this.decisionService = decisionService;
+        this.trialMode = trialMode;
     }
 
     @Transactional
@@ -56,20 +59,31 @@ public class TelemetryService {
         try {
             Map<String, Double> features = resolveFeatures(request);
             MlServiceClient.ScoreDto score = mlClient.score(request.sessionId().toString(), features);
-            response = decisionService.record(session, score, modalityOf(request));
+            response = decisionService.record(session, score, modalityOf(request), trialMode, latencyMs(start));
         } catch (RuntimeException e) {
             // Fail-safe boundary (ADR 0005): any ML path failure (timeout, retry
             // exhaustion, open circuit breaker) degrades to challenge, never allow.
             log.warn("session {} failing safe to challenge: {}", request.sessionId(), e.getMessage());
-            response = decisionService.recordFailure(session, "ml-service unavailable");
+            response = decisionService.recordFailure(session, "ml-service unavailable", trialMode, latencyMs(start));
         }
-        long latencyMs = (System.nanoTime() - start) / 1_000_000;
+        if (trialMode) {
+            // Shadow trial (Phase 9 B1): the real decision is persisted above
+            // (trial_mode=true) but the caller always sees `allow`.
+            response = new DecisionResponse(
+                response.sessionId(), "allow", response.humannessScore(),
+                response.modelVersion(), response.reasonCodes());
+        }
         log.info("telemetry processed",
             Markers.append("session_id", request.sessionId().toString()),
-            Markers.append("latency_ms", latencyMs),
+            Markers.append("latency_ms", latencyMs(start)),
             Markers.append("decision", response.decision()),
+            Markers.append("trial_mode", trialMode),
             Markers.append("events", totalEvents(request)));
         return response;
+    }
+
+    private long latencyMs(long startNanos) {
+        return (System.nanoTime() - startNanos) / 1_000_000;
     }
 
     private String modalityOf(TelemetryRequest request) {

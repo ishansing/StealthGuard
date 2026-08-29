@@ -41,5 +41,10 @@ retrain:
 observability:
 	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml up -d prometheus grafana
 
+# Phase 9 B1: generate the shadow-trial confidence report from trial-mode decisions.
+report:
+	mkdir -p docs/reports
+	$(COMPOSE) run --rm -v ./scripts:/scripts:ro -v ./docs/reports:/reports ml-service python /scripts/generate_confidence_report.py --ml-url http://localhost:8000 --gateway-url http://java-gateway:8080 --out /reports/trial-$$(date +%F).html
+
 demo: up seed train
 	@echo "Stack is up, seeded, and trained — ready to demo."

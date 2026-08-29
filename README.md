@@ -117,6 +117,24 @@ consumed by Docker Compose:
 | Abuse guards | `MAX_EVENTS_PER_ARRAY` (5000) |
 | Gateway | `HMAC_ENABLED` (Stretch), `LOG_LEVEL` |
 
+## Try it risk-free — evaluate before you enforce
+
+Run StealthGuard in **log-only trial mode**: every request is scored and the
+real would-have-been decision is persisted, but the caller always gets
+`allow`. After a trial window, generate a **deployment-confidence report** that
+answers "what happens if we turn this on?" with evidence — traffic breakdown,
+an accessibility pass/fail, a zero-PII confirmation, anonymized reason-code
+examples, and latency/health:
+
+```bash
+TRIAL_MODE=true docker compose up -d java-gateway   # log-only
+# … drive traffic (real or seeded) …
+make report                                          # docs/reports/trial-<date>.html
+```
+
+See the [Trial Guide](docs/trial-guide.md). A real example:
+[`docs/reports/trial-2026-08-29.html`](docs/reports/trial-2026-08-29.html).
+
 ## Deployment
 
 The stack is a **local-sandbox reference build** (see [SPEC.md](SPEC.md) §1) —

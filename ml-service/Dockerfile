@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir -e ".[dev]"
 
 COPY ml-service/tests tests
 COPY fixtures fixtures
+COPY scripts scripts
 RUN mkdir -p /app/models
 
 EXPOSE 8000

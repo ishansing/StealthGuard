@@ -2,7 +2,6 @@
 .git
 .github
 docs
-scripts
 **/node_modules
 **/target
 **/dist

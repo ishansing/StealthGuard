@@ -17,6 +17,8 @@ import org.stealthguard.gateway.service.TelemetryService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -37,15 +39,15 @@ class TelemetryServiceTest {
         when(sessionService.ensureFrom(any())).thenReturn(session);
         when(mlClient.computeFeatures(any())).thenReturn(new MlServiceClient.FeatureResponse(Map.of("event_count", 1.0)));
         when(mlClient.score(any(), any())).thenReturn(new MlServiceClient.ScoreDto(0.9, "human", "rule-based", List.of()));
-        when(decisionService.record(eq(session), any(), any())).thenReturn(allowed());
-        TelemetryService service = new TelemetryService(sessionService, eventRepo, mlClient, decisionService);
+        when(decisionService.record(eq(session), any(), any(), anyBoolean(), anyLong())).thenReturn(allowed());
+        TelemetryService service = new TelemetryService(sessionService, eventRepo, mlClient, decisionService, false);
 
         DecisionResponse response = service.ingest(rawRequest());
 
         assertEquals("allow", response.decision());
         verify(mlClient).computeFeatures(any());
         verify(mlClient).score(any(), any());
-        verify(decisionService).record(eq(session), any(), any());
+        verify(decisionService).record(eq(session), any(), any(), anyBoolean(), anyLong());
     }
 
     @Test
@@ -53,8 +55,8 @@ class TelemetryServiceTest {
         Session session = newSession();
         when(sessionService.ensureFrom(any())).thenReturn(session);
         when(mlClient.score(any(), any())).thenReturn(new MlServiceClient.ScoreDto(0.9, "human", "rule-based", List.of()));
-        when(decisionService.record(eq(session), any(), any())).thenReturn(allowed());
-        TelemetryService service = new TelemetryService(sessionService, eventRepo, mlClient, decisionService);
+        when(decisionService.record(eq(session), any(), any(), anyBoolean(), anyLong())).thenReturn(allowed());
+        TelemetryService service = new TelemetryService(sessionService, eventRepo, mlClient, decisionService, false);
 
         TelemetryRequest request = new TelemetryRequest(
             UUID.randomUUID(), "/login", Instant.now(), null, "aggregated",
@@ -71,14 +73,14 @@ class TelemetryServiceTest {
         when(sessionService.ensureFrom(any())).thenReturn(session);
         when(mlClient.computeFeatures(any())).thenReturn(new MlServiceClient.FeatureResponse(Map.of("event_count", 1.0)));
         when(mlClient.score(any(), any())).thenThrow(new MlUnavailableException("boom", null));
-        when(decisionService.recordFailure(eq(session), any())).thenReturn(
+        when(decisionService.recordFailure(eq(session), any(), anyBoolean(), anyLong())).thenReturn(
             new DecisionResponse(UUID.randomUUID(), "challenge", null, null, List.of()));
-        TelemetryService service = new TelemetryService(sessionService, eventRepo, mlClient, decisionService);
+        TelemetryService service = new TelemetryService(sessionService, eventRepo, mlClient, decisionService, false);
 
         DecisionResponse response = service.ingest(rawRequest());
 
         assertEquals("challenge", response.decision());
-        verify(decisionService).recordFailure(eq(session), eq("ml-service unavailable"));
+        verify(decisionService).recordFailure(eq(session), eq("ml-service unavailable"), anyBoolean(), anyLong());
     }
 
     private DecisionResponse allowed() {

@@ -39,6 +39,7 @@ stealthguard:
   bot-block-threshold-switch: ${BOT_BLOCK_THRESHOLD_SWITCH:0.0}
   max-events-per-array: ${MAX_EVENTS_PER_ARRAY:5000}
   hmac-enabled: ${HMAC_ENABLED:false}
+  trial-mode: ${TRIAL_MODE:false}
   challenge-answer: ${CHALLENGE_ANSWER:4}
 
 resilience4j:
