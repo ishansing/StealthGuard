@@ -10,6 +10,9 @@ target/
 # ---- Generated data (bot simulator output) ----
 scripts/bot-sim/out/
 
+# ---- Generated docs (TypeDoc output, regenerate with `bun run docs`) ----
+frontend/packages/stealthguard-sdk/docs/api-reference/
+
 # ---- Python ----
 __pycache__/
 *.py[cod]
