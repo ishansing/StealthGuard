@@ -12,6 +12,11 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 import joblib
+import numpy as np
+from sklearn.isotonic import IsotonicRegression
+from sklearn.linear_model import LogisticRegression
+
+from app.sequence import telemetry_to_sequence
 
 # Human-readable reason codes per feature, keyed by which way the
 # contribution pushed the score. "human" = pushed toward human-like,
@@ -41,6 +46,18 @@ LABEL_DICT: dict[str, dict[str, str]] = {
     },
     "session_duration_ms": {"human": "natural_session_length", "bot": "abbreviated_session"},
     "event_count": {"human": "natural_event_volume", "bot": "sparse_event_volume"},
+    "fitts_fit_error_ms": {"human": "fitts_conformant_movement", "bot": "non_conformant_movement"},
+    "arrival_to_click_latency_ms": {"human": "natural_click_pause", "bot": "instant_click"},
+    "micro_tremor_px_per_s2": {"human": "natural_micro_tremor", "bot": "no_micro_tremor"},
+    "digraph_mean_latency_ms": {
+        "human": "natural_digraph_timing",
+        "bot": "abnormal_digraph_timing",
+    },
+    "digraph_std_latency_ms": {"human": "natural_typing_rhythm", "bot": "uniform_keystroke_rhythm"},
+    "paste_event_count": {"human": "natural_input_behavior", "bot": "no_paste"},
+    "keyless_fill_count": {"human": "natural_input_behavior", "bot": "keyless_fill"},
+    "input_modality": {"human": "natural_input_modality", "bot": "unexpected_modality"},
+    "keystroke_share": {"human": "natural_input_mix", "bot": "unusual_input_mix"},
 }
 
 
@@ -68,6 +85,51 @@ def label_for_score(score: float, human_threshold: float, bot_threshold: float) 
     if score <= bot_threshold:
         return "bot"
     return "uncertain"
+
+
+MODALITY_NAMES = {0: "mouse", 1: "keyboard", 2: "touch", 3: "switch"}
+
+
+class Calibrator:
+    """Probability calibrator over a base model's raw output (Phase 9 A2).
+
+    Platt scaling (sigmoid) fits a logistic regression on the base
+    probability; isotonic fits an isotonic regression. `calibrate` maps a base
+    probability to a calibrated one so `humanness_score = 0.8` means a stable
+    ~80% confidence across retrains (ADR-0008).
+    """
+
+    def __init__(self, method: str, model) -> None:
+        self.method = method
+        self.model = model
+
+    @classmethod
+    def fit(cls, method: str, base_proba: np.ndarray, y: np.ndarray) -> "Calibrator":
+        if method == "sigmoid":
+            model = LogisticRegression().fit(base_proba.reshape(-1, 1), y)
+        else:
+            model = IsotonicRegression(out_of_bounds="clip").fit(base_proba, y)
+        return cls(method, model)
+
+    def calibrate(self, base_proba: float) -> float:
+        if self.method == "sigmoid":
+            return float(self.model.predict_proba([[base_proba]])[0][1])
+        return float(self.model.predict([base_proba])[0])
+
+    def calibrate_array(self, base_proba: np.ndarray) -> np.ndarray:
+        if self.method == "sigmoid":
+            return self.model.predict_proba(base_proba.reshape(-1, 1))[:, 1]
+        return self.model.predict(base_proba)
+
+
+def thresholds_for_features(
+    features: dict[str, float],
+    default: tuple[float, float],
+    per_modality: dict[str, tuple[float, float]],
+) -> tuple[float, float]:
+    """Pick (human, bot) label thresholds by the features' input_modality."""
+    modality = MODALITY_NAMES.get(int(features.get("input_modality", 0)), "mouse")
+    return per_modality.get(modality, default)
 
 
 def top_reason_codes(contributions: dict[str, float]) -> list[ReasonCode]:
@@ -114,13 +176,30 @@ class RuleBasedScorer(Scorer):
         "mouse_direction_changes": (12.0, 8.0, 1, 1.0),
         "session_duration_ms": (5200.0, 3000.0, 1, 0.3),
         "event_count": (145.0, 100.0, 1, 0.3),
+        # Phase 9 A1: richer features.
+        "fitts_fit_error_ms": (50.0, 40.0, -1, 0.5),
+        "arrival_to_click_latency_ms": (200.0, 150.0, 1, 0.3),
+        "micro_tremor_px_per_s2": (150.0, 120.0, 1, 0.6),
+        "digraph_mean_latency_ms": (150.0, 50.0, 1, 0.3),
+        "digraph_std_latency_ms": (25.0, 18.0, 1, 0.8),
+        "paste_event_count": (0.2, 0.4, 1, 0.2),
+        "keyless_fill_count": (0.1, 0.3, 1, 0.2),
+        # Phase 9 A5: modality context is neutral in the baseline — the
+        # per-modality threshold profiles handle accessibility, not the score.
+        "input_modality": (0.0, 1.0, 1, 0.0),
+        "keystroke_share": (0.5, 0.3, 1, 0.0),
     }
 
     def __init__(
-        self, human_threshold: float, bot_threshold: float, model_version: str = "rule-based"
+        self,
+        human_threshold: float,
+        bot_threshold: float,
+        model_version: str = "rule-based",
+        modality_thresholds: dict[str, tuple[float, float]] | None = None,
     ) -> None:
         self.human_threshold = human_threshold
         self.bot_threshold = bot_threshold
+        self.modality_thresholds = modality_thresholds or {}
         self.version = model_version
         self.model_version = model_version
 
@@ -139,16 +218,24 @@ class RuleBasedScorer(Scorer):
     def score(self, features: dict[str, float]) -> ScoreResult:
         logit, contributions = self._logit(features)
         humanness = sigmoid(logit)
+        human_t, bot_t = thresholds_for_features(
+            features, (self.human_threshold, self.bot_threshold), self.modality_thresholds
+        )
         return ScoreResult(
             humanness_score=round(humanness, 4),
-            label=label_for_score(humanness, self.human_threshold, self.bot_threshold),
+            label=label_for_score(humanness, human_t, bot_t),
             model_version=self.model_version,
             reason_codes=top_reason_codes(contributions),
         )
 
 
 class MLScorer(Scorer):
-    """Scorer backed by a trained model + metadata artifact (SPEC §9.1/§9.3)."""
+    """Scorer backed by a trained model + metadata artifact (SPEC §9.1/§9.3).
+
+    Uses the calibrated model (Phase 9 A2) for `humanness_score` when a
+    `calibrated.pkl` artifact exists; coefficients still come from the base
+    model for explainability.
+    """
 
     def __init__(
         self,
@@ -157,6 +244,8 @@ class MLScorer(Scorer):
         human_threshold: float,
         bot_threshold: float,
         explainer_path: str | None = None,
+        modality_thresholds: dict[str, tuple[float, float]] | None = None,
+        calibrated_path: str | None = None,
     ) -> None:
         self.model = joblib.load(model_path)
         with open(metadata_path) as fh:
@@ -167,6 +256,12 @@ class MLScorer(Scorer):
         self.stds = {f: float(v) for f, v in meta["stds"].items()}
         self.human_threshold = human_threshold
         self.bot_threshold = bot_threshold
+        self.modality_thresholds = modality_thresholds or {}
+        self.calibrated = (
+            joblib.load(calibrated_path)
+            if calibrated_path and os.path.exists(calibrated_path)
+            else None
+        )
 
         if meta.get("model_type") == "logistic":
             self.coefficients = self.model.coef_[0]
@@ -187,16 +282,50 @@ class MLScorer(Scorer):
 
     def score(self, features: dict[str, float]) -> ScoreResult:
         z = self._z(features)
-        humanness = float(self.model.predict_proba([z])[0][1])
+        base_proba = float(self.model.predict_proba([z])[0][1])
+        if self.calibrated is not None:
+            humanness = self.calibrated.calibrate(base_proba)
+        else:
+            humanness = base_proba
         contributions = {
             f: float(c * zi) for f, c, zi in zip(self.feature_list, self.coefficients, z)
         }
+        human_t, bot_t = thresholds_for_features(
+            features, (self.human_threshold, self.bot_threshold), self.modality_thresholds
+        )
         return ScoreResult(
             humanness_score=round(humanness, 4),
-            label=label_for_score(humanness, self.human_threshold, self.bot_threshold),
+            label=label_for_score(humanness, human_t, bot_t),
             model_version=self.version,
             reason_codes=top_reason_codes(contributions),
         )
+
+
+class SequenceShadowScorer:
+    """Lightweight sequence-model shadow candidate (Phase 9 A3).
+
+    Scores the raw event stream (not the feature vector) and is only ever
+    logged — never a decision — until evaluated against real traffic
+    (ADR-0009).
+    """
+
+    def __init__(self, model_path: str, metadata_path: str) -> None:
+        self.model = joblib.load(model_path)
+        with open(metadata_path) as fh:
+            meta = json.load(fh)
+        self.version = meta["version"]
+
+    def score(self, telemetry) -> float:
+        seq = telemetry_to_sequence(telemetry)
+        return float(self.model.predict_proba([seq])[0][1])
+
+
+def load_sequence_shadow(model_dir: str) -> SequenceShadowScorer | None:
+    model_path = os.path.join(model_dir, "model-v2-seq.pkl")
+    meta_path = os.path.join(model_dir, "metadata-v2-seq.json")
+    if os.path.exists(model_path) and os.path.exists(meta_path):
+        return SequenceShadowScorer(model_path, meta_path)
+    return None
 
 
 def load_scorer(
@@ -204,6 +333,7 @@ def load_scorer(
     human_threshold: float,
     bot_threshold: float,
     shadow_version: str | None = None,
+    modality_thresholds: dict[str, tuple[float, float]] | None = None,
 ) -> tuple[Scorer, Scorer | None]:
     """Load the active scorer (and optional shadow scorer) from MODEL_DIR."""
     model_path = os.path.join(model_dir, "model.pkl")
@@ -213,15 +343,24 @@ def load_scorer(
         with open(meta) as fh:
             model_type = json.load(fh).get("model_type")
         explainer = None
+        calibrated = None
+        stem = os.path.basename(path)[: -len(".pkl")]
+        model_dir = os.path.dirname(path)
         if model_type == "random_forest":
-            explainer = os.path.join(model_dir, "explainer.pkl")
-        return MLScorer(path, meta, human_threshold, bot_threshold, explainer)
+            # "model.pkl" -> "explainer.pkl"; "model-v2.pkl" -> "explainer-v2.pkl"
+            explainer = os.path.join(model_dir, stem.replace("model", "explainer", 1) + ".pkl")
+        calibrated = os.path.join(model_dir, stem.replace("model", "calibrated", 1) + ".pkl")
+        return MLScorer(
+            path, meta, human_threshold, bot_threshold, explainer, modality_thresholds, calibrated
+        )
 
     active: Scorer
     if os.path.exists(model_path) and os.path.exists(metadata_path):
         active = _build(model_path, metadata_path)
     else:
-        active = RuleBasedScorer(human_threshold, bot_threshold)
+        active = RuleBasedScorer(
+            human_threshold, bot_threshold, modality_thresholds=modality_thresholds
+        )
 
     shadow: Scorer | None = None
     if shadow_version:

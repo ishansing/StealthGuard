@@ -9,7 +9,11 @@
   ],
   "scripts": {
     "dev": "cd apps/demo && bun run dev",
+    "dev:admin": "cd apps/admin && bun run dev",
+    "dev:sandbox": "cd apps/sandbox && bun run dev",
     "build": "cd apps/demo && bun run build",
+    "build:admin": "cd apps/admin && bun run build",
+    "build:sandbox": "cd apps/sandbox && bun run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",

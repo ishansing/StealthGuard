@@ -1,0 +1,171 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+h1 {
+  margin-bottom: 1.5rem;
+}
+
+section {
+  margin-bottom: 2rem;
+}
+
+.stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.stat-block {
+  flex: 1 1 18rem;
+}
+
+.histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 120px;
+  border-bottom: 1px solid #666;
+}
+
+.hist-bar {
+  flex: 1;
+  background: #2563eb;
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+}
+
+.axis {
+  color: #888;
+  font-size: 0.75rem;
+  margin: 0.25rem 0 0;
+}
+
+.funnel-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.funnel-label {
+  width: 6rem;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.funnel-bar {
+  background: #16a34a;
+  color: #fff;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  min-width: 2rem;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+table.sessions {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.sessions th,
+.sessions td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #444;
+}
+
+.sessions tbody tr {
+  cursor: pointer;
+}
+
+.sessions tbody tr:hover,
+.sessions tbody tr.selected {
+  background: #1e3a8a33;
+}
+
+.meta strong {
+  text-transform: uppercase;
+}
+
+.detail-grid {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.detail-grid figure {
+  margin: 0;
+}
+
+.detail-grid figcaption {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 0.25rem;
+}
+
+canvas {
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #111;
+}
+
+.keystroke-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 200px;
+  width: 320px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #111;
+  padding: 8px;
+}
+
+.key-bar {
+  flex: 1;
+  background: #16a34a;
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+}
+
+.reviewer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.reviewer button {
+  padding: 0.4rem 0.9rem;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+.reviewer button[data-testid='mark-bot'] {
+  background: #b91c1c;
+}
+
+.hint {
+  color: #888;
+}
+
+.reasons {
+  color: #888;
+  font-size: 0.9rem;
+}

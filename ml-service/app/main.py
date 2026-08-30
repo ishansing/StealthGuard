@@ -2,10 +2,12 @@
 
 import json
 import logging
+import time
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 from fastapi import Depends, FastAPI, HTTPException, Request
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.config import Settings, get_settings
 from app.features import compute_features
@@ -17,11 +19,43 @@ from app.models import (
     ReasonCode,
     ScoreRequest,
     ScoreResponse,
+    ShadowScore,
 )
 from app.pii import contains_pii
-from app.scorer import Scorer, ScoreResult, load_scorer
+from app.scorer import Scorer, ScoreResult, SequenceShadowScorer, load_scorer, load_sequence_shadow
 
 logger = logging.getLogger(__name__)
+
+
+class JsonFormatter(logging.Formatter):
+    """Emit each record as one JSON object; sg_-prefixed extras become fields."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload: dict = {
+            "ts": round(time.time(), 3),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        for key, value in record.__dict__.items():
+            if key.startswith("sg_"):
+                payload[key[3:]] = value
+        return json.dumps(payload)
+
+
+def setup_json_logging() -> None:
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    if not root.handlers:
+        root.addHandler(logging.StreamHandler())
+    for handler in root.handlers:
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(JsonFormatter())
+
+
+def _structured(level: str, message: str, **fields) -> None:
+    log = getattr(logger, level)
+    log(message, extra={"sg_" + k: v for k, v in fields.items()})
 
 
 @asynccontextmanager
@@ -32,16 +66,24 @@ async def lifespan(app: FastAPI):
         settings.human_threshold,
         settings.bot_threshold,
         settings.model_version_shadow,
+        settings.modality_thresholds,
+    )
+    app.state.seq_shadow = (
+        load_sequence_shadow(settings.model_dir) if settings.model_version_shadow == "seq" else None
     )
     app.state.loaded_at = datetime.now(UTC).isoformat()
     if app.state.shadow_scorer is not None:
         logger.info("shadow scorer loaded: %s", settings.model_version_shadow)
+    if app.state.seq_shadow is not None:
+        logger.info("sequence shadow loaded: %s", app.state.seq_shadow.version)
     yield
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="StealthGuard ML Service", version="0.1.0", lifespan=lifespan)
     app.state.settings = settings or get_settings()
+    setup_json_logging()
+    Instrumentator().instrument(app).expose(app)
 
     async def pii_guard(request: Request) -> None:
         try:
@@ -78,6 +120,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         shadow = None
         if app.state.shadow_scorer is not None:
             shadow = app.state.settings.model_version_shadow
+        elif app.state.seq_shadow is not None:
+            shadow = app.state.seq_shadow.version
         return ModelVersionResponse(active=active, shadow=shadow)
 
     @app.post(
@@ -86,14 +130,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def score(req: ScoreRequest) -> ScoreResponse:
         scorer: Scorer = app.state.scorer
         result = scorer.score(req.features)
+        started = time.perf_counter()
         if app.state.shadow_scorer is not None:
             shadow_result = app.state.shadow_scorer.score(req.features)
-            logger.info(
-                "shadow session_id=%s score=%s model_version=%s",
-                req.session_id,
-                shadow_result.humanness_score,
-                shadow_result.model_version,
+            _structured(
+                "info",
+                "shadow score",
+                session_id=req.session_id,
+                score=shadow_result.humanness_score,
+                model_version=shadow_result.model_version,
             )
+        latency_ms = round((time.perf_counter() - started) * 1000, 2)
+        _structured(
+            "info",
+            "score",
+            session_id=req.session_id,
+            latency_ms=latency_ms,
+            score=result.humanness_score,
+            model_version=result.model_version,
+        )
         return _result_to_response(result, req.session_id)
 
     @app.post(
@@ -104,7 +159,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     def features(req: FeaturesRequest) -> FeaturesResponse:
         """Compute the canonical feature vector from raw telemetry (§6.2)."""
-        return FeaturesResponse(features=compute_features(req.model_dump()))
+        raw = req.model_dump()
+        shadow: ShadowScore | None = None
+        seq_shadow: SequenceShadowScorer | None = app.state.seq_shadow
+        if seq_shadow is not None:
+            score = seq_shadow.score(raw)
+            shadow = ShadowScore(score=round(score, 4), model_version=seq_shadow.version)
+        return FeaturesResponse(features=compute_features(raw), shadow=shadow)
 
     return app
 

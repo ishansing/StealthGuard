@@ -32,6 +32,7 @@ FIXTURES = {
         ],
         "touch_moves": [],
         "clicks": [{"x": 280, "y": 300, "t": 1714045002.4}],
+        "signals": {"paste_events": 1, "keyless_fills": 0, "input_modality": "mouse"},
     },
     "bot-uniform": {
         "keystrokes": [
@@ -49,19 +50,28 @@ FIXTURES = {
             {"x": 40, "y": 40, "t": 1714045000.2},
         ],
         "touch_moves": [],
-        "clicks": [],
+        "clicks": [{"x": 40, "y": 40, "t": 1714045000.25}],
+        "signals": {"paste_events": 0, "keyless_fills": 0, "input_modality": "keyboard"},
     },
-    "sparse": {
-        "keystrokes": [{"key": "x", "down_time": 1714045000.0, "up_time": 1714045000.1}],
+    "screen-reader": {
+        "keystrokes": [
+            {"key": "a", "down_time": 1714045000.0, "up_time": 1714045000.4},
+            {"key": "b", "down_time": 1714045000.5, "up_time": 1714045000.9},
+            {"key": "c", "down_time": 1714045001.0, "up_time": 1714045001.35},
+            {"key": "d", "down_time": 1714045001.6, "up_time": 1714045002.0},
+            {"key": "e", "down_time": 1714045002.1, "up_time": 1714045002.45},
+        ],
         "mouse_moves": [],
         "touch_moves": [],
         "clicks": [],
+        "signals": {"paste_events": 0, "keyless_fills": 0, "input_modality": "keyboard"},
     },
     "empty": {
         "keystrokes": [],
         "mouse_moves": [],
         "touch_moves": [],
         "clicks": [],
+        "signals": {},
     },
 }
 

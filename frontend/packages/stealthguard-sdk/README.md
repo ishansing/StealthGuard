@@ -12,6 +12,19 @@ npm install @stealthguard/sdk
 
 ## Quick start
 
+**One line** (auto-instruments every `<form>` on the page — Phase 9 B2):
+
+```ts
+import { StealthGuardClient } from '@stealthguard/sdk'
+
+new StealthGuardClient({ gatewayUrl: 'http://localhost:8080', autoInstrument: true }).start()
+```
+
+Each form submit flushes the session's telemetry to the gateway; the decision
+is available via `client.on(...)`.
+
+### Manual / explicit setup (advanced)
+
 ```ts
 import { StealthGuardClient } from '@stealthguard/sdk'
 

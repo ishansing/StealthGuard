@@ -7,6 +7,13 @@ target/
 .mise.toml
 .mise.local.toml
 
+# ---- Generated data (bot simulator output) ----
+scripts/bot-sim/out/
+scripts/bot-sim/out-redteam/
+
+# ---- Generated docs (TypeDoc output, regenerate with `bun run docs`) ----
+frontend/packages/stealthguard-sdk/docs/api-reference/
+
 # ---- Python ----
 __pycache__/
 *.py[cod]

@@ -10,16 +10,25 @@ class ScoreRequest(BaseModel):
 
 
 class FeaturesRequest(BaseModel):
-    """Raw telemetry (§6.2) from which the canonical feature vector is computed."""
+    """Raw telemetry (§6.2 + Phase 9 signals) from which the canonical feature vector is computed."""
 
     keystrokes: list[dict] = []
     mouse_moves: list[dict] = []
     touch_moves: list[dict] = []
     clicks: list[dict] = []
+    signals: dict = {}
+
+
+class ShadowScore(BaseModel):
+    """Shadow-model output (Phase 9 A3) — logged, never a decision."""
+
+    score: float
+    model_version: str
 
 
 class FeaturesResponse(BaseModel):
     features: dict[str, float]
+    shadow: ShadowScore | None = None
 
 
 class ReasonCode(BaseModel):

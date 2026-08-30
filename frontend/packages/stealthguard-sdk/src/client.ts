@@ -34,6 +34,8 @@ export class StealthGuardClient {
   readonly privacyMode: PrivacyMode
   readonly flushIntervalMs: number
   readonly maxEventsPerType: number
+  readonly autoInstrument: boolean
+  readonly selector: string
   readonly sdkVersion = '0.1.0'
 
   private readonly listeners = new Set<Listener>()
@@ -47,6 +49,12 @@ export class StealthGuardClient {
   private sawMouse = false
   private sawTouch = false
   private latestDecision: Decision | null = null
+  private pasteEvents = 0
+  private keylessFills = 0
+  private focusedKeydowns = 0
+  private readonly instrumentedForms = new WeakSet<HTMLFormElement>()
+  private observer: MutationObserver | null = null
+  private instrumented = false
 
   constructor(options: StealthGuardOptions) {
     this.gatewayUrl = options.gatewayUrl.replace(/\/$/, '')
@@ -54,6 +62,8 @@ export class StealthGuardClient {
     this.privacyMode = options.privacyMode ?? 'raw'
     this.flushIntervalMs = options.flushIntervalMs ?? 2000
     this.maxEventsPerType = options.maxEventsPerType ?? 500
+    this.autoInstrument = options.autoInstrument ?? false
+    this.selector = options.selector ?? 'form'
     this._sessionId = options.sessionId ?? null
   }
 
@@ -91,9 +101,55 @@ export class StealthGuardClient {
     return this._sessionId!
   }
 
+  /** One-line entry point (Phase 9 B2): init() + auto-instrument matching
+   *  elements so a minimal integration is genuinely one line. */
+  async start(): Promise<string> {
+    const sessionId = await this.init()
+    if (this.autoInstrument && !this.instrumented) {
+      this.instrumented = true
+      this.observeForms()
+    }
+    return sessionId
+  }
+
   destroy(): void {
     this.detachListeners()
+    this.detachInstrumentation()
     if (this.timer !== null) clearInterval(this.timer)
+  }
+
+  private observeForms(): void {
+    this.instrumentForms(document.querySelectorAll(this.selector))
+    if (typeof MutationObserver !== 'undefined' && document.body) {
+      this.observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            if (node instanceof HTMLFormElement) this.instrumentForm(node)
+            else if (node instanceof Element) this.instrumentForms(node.querySelectorAll(this.selector))
+          }
+        }
+      })
+      this.observer.observe(document.body, { childList: true, subtree: true })
+    }
+  }
+
+  private instrumentForms(forms: NodeListOf<HTMLFormElement> | HTMLFormElement[]): void {
+    for (const form of forms) this.instrumentForm(form)
+  }
+
+  private instrumentForm(form: HTMLFormElement): void {
+    if (this.instrumentedForms.has(form)) return
+    this.instrumentedForms.add(form)
+    form.addEventListener('submit', this.onFormSubmit)
+  }
+
+  private detachInstrumentation(): void {
+    this.observer?.disconnect()
+    this.observer = null
+  }
+
+  private readonly onFormSubmit = (): void => {
+    void this.flush()
   }
 
   async flush(): Promise<Decision | null> {
@@ -140,7 +196,20 @@ export class StealthGuardClient {
       mouse_moves: this.mouseMoves,
       touch_moves: this.touchMoves,
       clicks: this.clicks,
+      signals: this.signals(),
     }
+  }
+
+  private signals(): { paste_events: number; keyless_fills: number; input_modality: string } {
+    return {
+      paste_events: this.pasteEvents,
+      keyless_fills: this.keylessFills,
+      input_modality: this.modality(),
+    }
+  }
+
+  private modality(): 'mouse' | 'touch' | 'keyboard' {
+    return this.sawTouch ? 'touch' : this.sawMouse ? 'mouse' : 'keyboard'
   }
 
   private buildPayload(): Record<string, unknown> | null {
@@ -148,7 +217,9 @@ export class StealthGuardClient {
       this.keystrokes.length === 0 &&
       this.mouseMoves.length === 0 &&
       this.touchMoves.length === 0 &&
-      this.clicks.length === 0
+      this.clicks.length === 0 &&
+      this.pasteEvents === 0 &&
+      this.keylessFills === 0
     ) {
       return null
     }
@@ -158,6 +229,7 @@ export class StealthGuardClient {
       timestamp: new Date().toISOString(),
       sdk_version: this.sdkVersion,
       privacy_mode: this.privacyMode,
+      signals: this.signals(),
       meta: this.meta(),
     }
     if (this.privacyMode === 'aggregated') {
@@ -172,13 +244,12 @@ export class StealthGuardClient {
   }
 
   private meta(): TelemetryMeta {
-    const modality = this.sawTouch ? 'touch' : this.sawMouse ? 'mouse' : 'keyboard'
     return {
       user_agent: navigator.userAgent,
       viewport_width: window.innerWidth,
       viewport_height: window.innerHeight,
       timezone_offset: -new Date().getTimezoneOffset(),
-      input_modality: modality,
+      input_modality: this.modality(),
     }
   }
 
@@ -207,6 +278,7 @@ export class StealthGuardClient {
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     if (e.repeat) return
     this.keysDown.set(e.key, this.now())
+    this.focusedKeydowns++
   }
 
   private readonly onKeyUp = (e: KeyboardEvent): void => {
@@ -214,6 +286,21 @@ export class StealthGuardClient {
     if (down === undefined) return
     this.keysDown.delete(e.key)
     this.push(this.keystrokes, { key: e.key, down_time: down, up_time: this.now() })
+  }
+
+  private readonly onPaste = (): void => {
+    this.pasteEvents++
+  }
+
+  private readonly onFocusIn = (): void => {
+    this.focusedKeydowns = 0
+  }
+
+  private readonly onFocusOut = (): void => {
+    // A field that was focused with zero keydowns was filled by autofill or
+    // assistive software, not typed — a strong, privacy-safe signal (Phase 9 A1).
+    if (this.focusedKeydowns === 0) this.keylessFills++
+    this.focusedKeydowns = 0
   }
 
   private readonly onMouseMove = (e: MouseEvent): void => {
@@ -251,6 +338,9 @@ export class StealthGuardClient {
     document.addEventListener('mousemove', this.onMouseMove)
     document.addEventListener('touchmove', this.onTouchMove)
     document.addEventListener('click', this.onClick)
+    document.addEventListener('paste', this.onPaste)
+    document.addEventListener('focusin', this.onFocusIn)
+    document.addEventListener('focusout', this.onFocusOut)
     document.addEventListener('visibilitychange', this.onVisibilityChange)
     window.addEventListener('beforeunload', this.onBeforeUnload)
   }
@@ -261,6 +351,9 @@ export class StealthGuardClient {
     document.removeEventListener('mousemove', this.onMouseMove)
     document.removeEventListener('touchmove', this.onTouchMove)
     document.removeEventListener('click', this.onClick)
+    document.removeEventListener('paste', this.onPaste)
+    document.removeEventListener('focusin', this.onFocusIn)
+    document.removeEventListener('focusout', this.onFocusOut)
     document.removeEventListener('visibilitychange', this.onVisibilityChange)
     window.removeEventListener('beforeunload', this.onBeforeUnload)
   }

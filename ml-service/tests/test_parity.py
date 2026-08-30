@@ -10,7 +10,16 @@ import pytest
 
 from app.features import compute_features
 
-FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "feature-parity.json"
+
+def _find_fixture() -> Path:
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "fixtures" / "feature-parity.json"
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError("fixtures/feature-parity.json not found")
+
+
+FIXTURE = _find_fixture()
 
 
 def test_parity_fixture_matches_canonical_features() -> None:
@@ -20,9 +29,9 @@ def test_parity_fixture_matches_canonical_features() -> None:
         actual = compute_features(case["input"])
         for feature, expected in case["expected"].items():
             assert feature in actual, f"{case['name']}: missing {feature}"
-            assert actual[feature] == pytest.approx(expected, rel=1e-9), (
-                f"{case['name']}: {feature} = {actual[feature]}, expected {expected}"
-            )
+            assert actual[feature] == pytest.approx(
+                expected, rel=1e-9
+            ), f"{case['name']}: {feature} = {actual[feature]}, expected {expected}"
 
 
 def test_fixture_file_exists() -> None:

@@ -563,6 +563,272 @@ Every phase produces docs as part of its Definition of Done (§14) — this sect
 
 ---
 
+### Phase 9 — Accuracy & Adoption (post-MVP engagement) **[MVP + Stretch]**
+
+> Two tracks deliberately out of scope for the MVP, now in scope:
+>
+> - **Detection accuracy** — richer behavioral features, calibrated scoring, a
+>   sequence-model shadow candidate, and an adversarial evaluation loop.
+> - **Adoption** — evidence a prospective org can trust the system *before* it
+>   ever blocks a real user, plus lower-friction integration.
+>
+> These are not bolt-ons: they follow the same spec-first → code → tests →
+> docs → DoD flow as Phases 0–8.
+>
+> **Non-negotiables (apply to every phase below):** nothing may weaken the
+> no-PII guard, the fail-safe-to-challenge policy for non-trial requests, or
+> the cross-language feature parity test. The `adaptive` and `accessibility`
+> bot-sim personas exist strictly to evaluate and harden this project's own
+> classifier and trial report — never generalized into a standalone evasion
+> tool. Every task follows §14 Definition of Done in full.
+
+#### A1 — Richer feature set **[MVP]**
+
+**Objective:** extend the canonical feature formulas (`ml-service/features.py`,
+kept in lockstep with the TypeScript port and the Phase 4 parity fixtures) with
+five behaviorally richer features.
+
+**Tasks**
+
+1. **Fitts's-law conformance** — for each click, regress observed movement
+   time against the theoretical `a + b·log2(distance/width + 1)` relationship
+   for the target; emit the fit residual/error as a feature. Treat as
+   first-class, not an afterthought — it is among the hardest signals for a
+   naive bot to fake.
+2. **Micro-tremor** — high-frequency (~8–12 Hz) jitter magnitude along the
+   pointer path, from the second derivative of position. Near-zero tremor on an
+   otherwise smooth path is a strong bot indicator even when
+   `mouse_path_efficiency` looks human.
+3. **Arrival-to-click latency** — time between the cursor settling inside a
+   target's bounding box and the click event.
+4. **Digraph/trigraph keystroke timing** — replace/augment the single
+   mean/std hold-time features with per-key-pair latency distributions for the
+   most frequent digraphs in the observed input.
+5. **Paste/autofill detection** — flag fields populated by a paste event or
+   browser autofill rather than sequential keydown events (privacy-safe: needs
+   no new raw data collection).
+
+**Tests:** extend `test_feature_engineering.py` (Hypothesis: each new feature
+finite and stable on empty/degenerate input) and the `/fixtures` parity vectors
+to cover every new feature in both languages.
+
+**Docs:** update `docs/ml-design.md`'s feature table with formulas and a
+one-line rationale per feature.
+
+**DoD:** every new feature finite under Hypothesis; parity green in Python and
+TypeScript; `docs/ml-design.md` updated.
+
+#### A2 — Score calibration **[MVP]**
+
+**Objective:** add a calibration step (Platt scaling or isotonic regression via
+`CalibratedClassifierCV`) between the raw model output and `humanness_score`,
+so `0.8` means a stable, comparable confidence level across retrains and model
+versions — not an arbitrary logit.
+
+**Tasks**
+
+1. Insert calibration into the scoring path (train-time fit, serve-time apply).
+2. Store the calibration method and parameters in
+   `model_registry.metadata_json` (and the ML `metadata.json`).
+3. Keep the §8.1 thresholds (0.8/0.4) — they now refer to calibrated
+   confidence.
+
+**Tests:** `test_score_calibration.py` — verify a calibration curve on a
+held-out fold is monotonic and within tolerance of the identity line.
+
+**Docs:** add a "Calibration" subsection to `docs/ml-design.md`.
+
+**DoD:** calibrated scores in the live `/score` path; calibration test green;
+ml-design documents the method.
+
+#### A3 — Sequence-model shadow candidate **[Stretch]**
+
+**Objective:** using the §9.5 shadow mechanism, train a lightweight 1D-CNN or
+small RNN over the raw (non-aggregated) event stream as candidate
+`model_version v2-seq`, loaded via `MODEL_VERSION_SHADOW`. It must never affect
+real decisions — only log to `scores` with `is_shadow=true`.
+
+**Tasks**
+
+1. Sequence-model training script producing a shadow artifact.
+2. Wire it through the existing shadow loader; add
+   `scripts/compare_shadow.py` reporting agreement rate and disagreement cases
+   between active and shadow models.
+
+**Tests:** `test_shadow_scoring.py` — shadow model runs and logs without
+touching decisions.
+
+**Docs:** `docs/adr/0009-sequence-model-shadow-candidate.md` explaining why this
+stays in shadow until evaluated against real (not just synthetic) traffic.
+
+**DoD:** shadow model scores in parallel, logs-only, via `MODEL_VERSION_SHADOW`;
+comparison script produces a readable report.
+
+#### A4 — Adversarial red-team loop **[MVP]**
+
+**Objective:** extend `scripts/bot-sim` with a fourth persona, `adaptive`, that
+deliberately adds randomized jitter, occasional pauses, and non-uniform digraph
+timing calibrated to just undercut the current model's decision boundary —
+regenerated against whatever model is currently active, not hardcoded once.
+
+**Tasks**
+
+1. `adaptive` persona generator parameterized by the active model's boundary.
+2. A `make redteam` target: (a) generate a batch of adaptive sessions against
+   the current model, (b) report what fraction still gets classified as human,
+   (c) optionally fold the persona's data back into training if the evasion
+   rate exceeds a documented threshold.
+
+**Tests:** `test_adaptive_persona.py` — statistical sanity that the persona is
+distinguishable from real recorded human sessions in the fixture set (guards
+against accidentally training the model to reject real humans).
+
+**Docs:** `docs/adr/0010-adversarial-evaluation-loop.md`;
+`scripts/bot-sim/README.md` update (persona exists only to harden this
+project's own classifier, per the existing ethical-scope note).
+
+**DoD:** `make redteam` runs end-to-end and prints an evasion rate; persona
+sanity tests green.
+
+#### A5 — Accessibility-aware thresholds **[MVP]**
+
+**Objective:** fairness requirement, not a nice-to-have. Add input-modality
+context (`meta.input_modality`, already in the schema) and assistive-technology
+signals to the feature vector, and support per-modality threshold profiles in
+`DecisionService`/`MLScorer` config instead of one global cutoff.
+
+**Tasks**
+
+1. Modality-aware features + per-modality threshold profiles.
+2. New accessibility personas in the simulator: screen-reader-driven
+   keyboard-only navigation, switch-device input (long dwell, discrete
+   selection events), and tremor-affected mouse movement (elevated but
+   genuinely human micro-tremor).
+3. These personas must consistently resolve to `allow` or, at worst,
+   `challenge` with the audio alternative — never silently `block`.
+
+**Tests:** `test_accessibility_personas.py` — hard-fail if any accessibility
+persona resolves to `block`.
+
+**Docs:** `docs/adr/0011-accessibility-aware-thresholds.md`; an "Accessibility
+& Fairness" section in `PRIVACY.md` or a new `docs/fairness.md`.
+
+**DoD:** accessibility personas pass (zero blocks) against the current
+thresholds; per-modality profiles configurable; tests green.
+
+#### B1 — Shadow Trial → Deployment Confidence Report **[MVP]**
+
+**Objective:** the standout adoption feature. Let a prospective org run
+StealthGuard in log-only mode against real (or seeded) traffic for a
+configurable trial window, then generate a report answering "what happens if we
+turn this on?" with evidence instead of a sales pitch.
+
+**Tasks**
+
+1. `TRIAL_MODE=log_only` config flag on the Java gateway: every request is
+   scored and a decision is computed and persisted as normal, but the gateway
+   **always returns `allow`** to the caller. Persist the would-have-been
+   decision separately (a `would_have_decision` column or `trial_mode` boolean)
+   so trial mode never weakens the fail-safe policy for real deployments —
+   explicit and opt-in.
+2. `scripts/generate_confidence_report.py`, run against a completed trial
+   window, producing a static HTML report containing:
+   - traffic breakdown (fraction that would have been allowed/challenged/
+     blocked) with the top reason codes for the challenged/blocked cohort;
+   - accessibility stress-test results (A5 personas against the trial's active
+     model/thresholds) with an explicit pass/fail statement;
+   - data-minimization confirmation (automated scan of `telemetry_events`
+     for the trial window confirming zero PII-shaped fields — reuses the
+     Phase 2/3 guard);
+   - example (anonymized — session IDs only) reason codes for a handful of
+     blocked/challenged sessions;
+   - latency and uptime summary for the trial window.
+3. Output to `docs/reports/trial-<date>.html`; print a one-line summary to
+   stdout suitable for Slack/email.
+
+**Tests:** `test_trial_mode.py` (Java) — trial mode never returns anything but
+`allow` to the caller while still persisting the real decision;
+`test_confidence_report.py` (Python) — generator produces valid HTML with all
+required sections from a fixture dataset, and correctly flags a fixture
+containing a blocked accessibility persona as a failing report.
+
+**Docs:** `docs/adr/0012-shadow-trial-mode.md`; `docs/trial-guide.md` walking an
+adopting org through a trial end-to-end; a "Try it risk-free" subsection in the
+root `README.md`.
+
+**DoD:** trial mode verified (Java + Python tests green); a real
+`docs/reports/trial-<date>.html` generated from seeded demo data and linked
+from the root README.
+
+#### B2 — Auto-instrumenting SDK **[Stretch]**
+
+**Objective:** opt-in `autoInstrument: true` on `StealthGuardClient` that
+discovers `<form>` elements (or a configurable selector) and attaches listeners
+automatically, so a minimal integration is genuinely one line:
+`new StealthGuardClient({ apiBaseUrl, autoInstrument: true }).start()`. The
+manual Phase 4 API stays fully intact — additive, not a replacement.
+
+**Tasks**
+
+1. `autoInstrument` discovery + MutationObserver for late-added forms.
+2. `start()` one-liner; keep `init()`/manual listeners unchanged.
+
+**Tests:** `client.autoinstrument.test.ts` — forms added to the DOM after
+`start()` are picked up via the MutationObserver, and `autoInstrument: false`
+(default) behaves exactly as before.
+
+**Docs:** SDK README quick-start leads with the one-line version; manual setup
+moves to an "advanced" section.
+
+**DoD:** auto-instrument tests green; README updated.
+
+#### B3 — Public sandbox **[Stretch]**
+
+**Objective:** a standalone demo page (`frontend/apps/sandbox`) where a visitor
+can paste/type into a live form and immediately see it scored against the
+bot-simulator personas (including `adaptive` and accessibility personas) without
+integrating anything — a "try it before you touch your code" evaluation tool.
+Follows DESIGN.md's portal conventions (calm, Signal Teal, the Rhythm Line as
+the literal visual output of what's being scored).
+
+**Tasks**
+
+1. Sandbox app: live-scoring form + persona comparison.
+2. Render the Rhythm Line for the current score.
+
+**Tests:** component tests for the live-scoring UI against mocked gateway
+responses.
+
+**Docs:** `frontend/apps/sandbox/README.md`.
+
+**DoD:** sandbox scores a visitor's input live against gateway responses; tests
+green.
+
+---
+
+#### Phase 9 sequencing & engagement DoD
+
+Suggested order (each independently mergeable and demoable):
+
+1. **A1** (feature richness) and **A5** (accessibility thresholds) together —
+   A5 depends on modality-aware features.
+2. **A2** (calibration) — depends on A1 being stable.
+3. **B1** (Confidence Report) — the priority adoption feature; depends on A5's
+   personas existing, not on A2/A3.
+4. **A4**, **A3**, **B2**, **B3** — in any order, time permitting.
+
+**Engagement Definition of Done:**
+
+- [ ] SPEC.md updated with the new phases *before* implementation began (this section).
+- [ ] All ADRs listed above written (0007–0012).
+- [ ] All new features covered by tests at the §12 coverage guidance.
+- [ ] A real `docs/reports/trial-<date>.html` generated from seeded demo data
+      and linked from the root `README.md`.
+- [ ] Accessibility personas pass (zero blocks) against the current thresholds,
+      verified in CI.
+- [ ] `make demo` still succeeds end-to-end with all of the above enabled.
+
+---
 ## 16. Success Metrics & Demo Script
 
 - **Accuracy (aspirational target):** >90% on the synthetic held-out set (§9.4) — a target, not a guarantee, since real-world bot behavior is more varied than any simulator.

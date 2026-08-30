@@ -4,24 +4,39 @@ Reference design for StealthGuard's bot-detection scoring. Canonical
 implementation: `ml-service/app/features.py` (this module is the single source
 of truth the SDK's TypeScript port must match — see Phase 4 parity tests).
 
-## Feature vector (§9.2)
+## Feature vector (§9.2 + Phase 9 A1/A5)
 
-Twelve features derived from raw telemetry (SPEC §6.2 shape):
+Twenty-one features derived from raw telemetry (SPEC §6.2 shape, plus the
+privacy-safe `signals` block from Phase 9 A5 — precomputed counts and input
+modality only, never raw content):
 
-| Feature | Formula |
-|---|---|
-| `keystroke_mean_hold_ms` | mean `(up_time − down_time) × 1000` |
-| `keystroke_std_hold_ms` | population std of hold times |
-| `keystroke_mean_interkey_ms` | mean press-to-press interval × 1000 |
-| `keystroke_std_interkey_ms` | population std of press-to-press intervals |
-| `typing_speed_chars_per_s` | keystroke count ÷ session duration |
-| `mouse_mean_speed_px_per_s` | mean segment speed (`dist / dt`) over mouse+touch moves |
-| `mouse_std_speed_px_per_s` | population std of segment speeds |
-| `mouse_path_efficiency` | straight-line distance ÷ total path length |
-| `mouse_idle_ratio` | 1 − active-time ÷ duration; active = segment gaps ≤ 1000 ms |
-| `mouse_direction_changes` | count of consecutive segments diverging > 45° |
-| `session_duration_ms` | (max − min) event timestamp × 1000 |
-| `event_count` | total keystrokes + moves + clicks |
+| Feature | Formula | Rationale |
+|---|---|---|
+| `keystroke_mean_hold_ms` | mean `(up_time − down_time) × 1000` | human typing baseline |
+| `keystroke_std_hold_ms` | population std of hold times | humans vary; bots don't |
+| `keystroke_mean_interkey_ms` | mean press-to-press interval × 1000 | typing pace |
+| `keystroke_std_interkey_ms` | population std of press-to-press intervals | rhythmic uniformity = bot |
+| `typing_speed_chars_per_s` | keystroke count ÷ session duration | bots type at extreme rates |
+| `mouse_mean_speed_px_per_s` | mean segment speed (`dist / dt`) | pointer pace |
+| `mouse_std_speed_px_per_s` | population std of segment speeds | constant speed = bot |
+| `mouse_path_efficiency` | straight-line distance ÷ total path length | straight paths = bot |
+| `mouse_idle_ratio` | 1 − active-time ÷ duration | humans pause |
+| `mouse_direction_changes` | count of consecutive segments diverging > 45° | humans zigzag |
+| `session_duration_ms` | (max − min) event timestamp × 1000 | bots finish instantly |
+| `event_count` | total keystrokes + moves + clicks | event volume |
+| `fitts_fit_error_ms` | RMSE of `T = a + b·log2(D/W + 1)` over click approaches (W = assumed 30 px target) | humans follow the Fitts speed–accuracy tradeoff; constant-speed bots don't |
+| `arrival_to_click_latency_ms` | mean time from entering the target radius to the click | humans settle before clicking |
+| `micro_tremor_px_per_s2` | mean magnitude of the second finite difference of pointer position | a smooth path with no tremor is a bot tell |
+| `digraph_mean_latency_ms` | mean latency across the top-5 most frequent key-pair digraphs | digraph timing is a keystroke-dynamics staple |
+| `digraph_std_latency_ms` | population std across those digraphs | pair-specific variance is human |
+| `paste_event_count` | count of paste events (`signals.paste_events`) | pasting is natural, privacy-safe input |
+| `keyless_fill_count` | count of focused fields filled with zero keydowns (`signals.keyless_fills`) | autofill/assistive fill detection |
+| `input_modality` | `mouse=0, keyboard=1, touch=2, switch=3` | drives per-modality thresholds (A5) |
+| `keystroke_share` | keystrokes ÷ total events | keyboard-centric (e.g. screen-reader) use |
+
+Fitts's law and arrival-to-click use an **assumed 30 px target width** because
+DOM geometry is not in the telemetry; a production integration would supply
+real target geometry. All outputs are finite; empty/malformed input → zeros.
 
 Edge-case rules (guarded so every output is finite; empty/malformed input → zeros):
 - Segments closer than 1 ms carry no velocity (real telemetry has ms precision).
@@ -45,6 +60,29 @@ Edge-case rules (guarded so every output is finite; empty/malformed input → ze
 
 Standardization: features are z-scored against training means/stds (stored in
 `metadata.json`) before prediction and before coefficient×z explainability.
+
+## Calibration (Phase 9 A2)
+
+The raw model output is **calibrated** so `humanness_score` has a stable,
+comparable meaning across retrains and model versions (ADR-0008): `0.8` means
+"≈80% of sessions scored 0.8 are genuinely human", not merely "logit ≥ 0.8".
+
+- **Method:** `CalibratedClassifierCV`-style probability calibration — Platt
+  (sigmoid) and isotonic regressions are each fit on the base model's raw
+  predicted probabilities over a **stratified calibration split** (25% of the
+  training data, held out from model fitting). The better one by **Brier score
+  evaluated on the fit split** (data the calibrator never saw) is deployed as
+  `calibrated.pkl` — this penalizes overfitting the small calibration set.
+- **Storage:** the method and Brier score are recorded in `metadata.json` and
+  `model_registry.metrics_json`, so every model version documents how its
+  scores were calibrated.
+- **Serve:** `MLScorer` applies `calibrated.pkl` when present; the base
+  `model.pkl` still provides the coefficients for reason codes.
+- **Rule-based baseline:** exempt — it is not a probability model and its
+  heuristic sigmoid is documented as uncalibrated.
+- **Guarantee:** `test_score_calibration.py` verifies on a held-out fold that
+  the calibrated calibration curve is monotonic and moves closer to the
+  identity line than the raw curve.
 
 ## Explainability (§9.3)
 

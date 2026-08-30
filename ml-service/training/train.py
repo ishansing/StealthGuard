@@ -28,17 +28,19 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score, brier_score_loss
+from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from app.features import FEATURE_NAMES, compute_features
+from app.scorer import Calibrator
 
 logger = logging.getLogger(__name__)
 
 METADATA_FILE = "metadata.json"
 MODEL_FILE = "model.pkl"
 EXPLAINER_FILE = "explainer.pkl"
+CALIBRATED_FILE = "calibrated.pkl"
 
 # Tie-break margin: Random Forest must beat Logistic Regression by this much
 # CV-AUC to be deployed, otherwise the explainable LR wins.
@@ -97,20 +99,31 @@ def train(
     register_db: str | None = None,
     cv: int | None = None,
 ) -> dict:
-    """Train, compare, deploy. Returns metadata dict (and registers if asked)."""
+    """Train, compare, calibrate, deploy. Returns metadata dict (and registers if asked).
+
+    The data is split into a fit set and a calibration set (stratified); the
+    deployed model's probabilities are calibrated (Platt/isotonic via
+    CalibratedClassifierCV) on the calibration set so humanness_score has a
+    stable meaning across retrains (Phase 9 A2, ADR-0008).
+    """
     os.makedirs(output_dir, exist_ok=True)
 
-    scaler = StandardScaler().fit(X)
-    Xz = pd.DataFrame(scaler.transform(X), columns=X.columns)
+    X_fit, X_cal, y_fit, y_cal = train_test_split(X, y, test_size=0.25, stratify=y, random_state=0)
 
-    lr = LogisticRegression(max_iter=1000, random_state=0).fit(Xz, y)
-    rf = RandomForestClassifier(n_estimators=100, random_state=0).fit(Xz, y)
+    scaler = StandardScaler().fit(X_fit)
+    Xz_fit = pd.DataFrame(scaler.transform(X_fit), columns=X_fit.columns)
+    Xz_cal = pd.DataFrame(scaler.transform(X_cal), columns=X_cal.columns)
+
+    lr = LogisticRegression(max_iter=1000, random_state=0).fit(Xz_fit, y_fit)
+    rf = RandomForestClassifier(n_estimators=100, random_state=0).fit(Xz_fit, y_fit)
 
     if cv is None:
-        counts = np.bincount(y)
+        counts = np.bincount(y_fit)
         cv = min(3, int(counts.min())) if counts.min() >= 2 else 1
-    lr_auc = cv_auc(Xz.to_numpy(), y, LogisticRegression(max_iter=1000, random_state=0), cv)
-    rf_auc = cv_auc(Xz.to_numpy(), y, RandomForestClassifier(n_estimators=100, random_state=0), cv)
+    lr_auc = cv_auc(Xz_fit.to_numpy(), y_fit, LogisticRegression(max_iter=1000, random_state=0), cv)
+    rf_auc = cv_auc(
+        Xz_fit.to_numpy(), y_fit, RandomForestClassifier(n_estimators=100, random_state=0), cv
+    )
 
     if rf_auc > lr_auc + RF_MARGIN:
         deployed, model_type = rf, "random_forest"
@@ -121,10 +134,13 @@ def train(
     if model_type == "random_forest":
         joblib.dump(lr, os.path.join(output_dir, EXPLAINER_FILE))
 
+    calibration = _fit_calibration(deployed, Xz_fit, y_fit, Xz_cal, y_cal, output_dir)
+
     metrics = {
         "lr_cv_auc": round(lr_auc, 4),
         "rf_cv_auc": round(rf_auc, 4),
-        "train_accuracy": round(float(accuracy_score(y, deployed.predict(Xz))), 4),
+        "train_accuracy": round(float(accuracy_score(y_fit, deployed.predict(Xz_fit))), 4),
+        "calibration": calibration,
     }
     metadata = {
         "version": version,
@@ -142,14 +158,56 @@ def train(
         _register_in_db(register_db, metadata)
 
     logger.info(
-        "trained %s v%s: lr_auc=%s rf_auc=%s cv=%s",
+        "trained %s v%s: lr_auc=%s rf_auc=%s cv=%s calibration=%s",
         model_type,
         version,
         lr_auc,
         rf_auc,
         cv,
+        calibration.get("method"),
     )
     return metadata
+
+
+def _fit_calibration(
+    deployed,
+    Xz_fit: pd.DataFrame,
+    y_fit: np.ndarray,
+    Xz_cal: pd.DataFrame,
+    y_cal: np.ndarray,
+    output_dir: str,
+) -> dict:
+    """Calibrate the deployed model's raw output on the calibration split.
+
+    Fits Platt (sigmoid) and isotonic calibrators on the base model's
+    predicted probabilities and keeps the better one by Brier score evaluated
+    on the FIT split (data the calibrator never saw), which penalizes
+    overfitting the small calibration set (Phase 9 A2, ADR-0008).
+    """
+    not_fitted = {"method": None, "fitted": False, "n_samples": len(y_cal)}
+    if min(np.bincount(y_cal)) < 5:
+        return not_fitted
+    cal_proba = deployed.predict_proba(Xz_cal)[:, 1]
+    fit_proba = deployed.predict_proba(Xz_fit)[:, 1]
+    best: tuple[float, Calibrator, str] | None = None
+    for method in ("sigmoid", "isotonic"):
+        try:
+            calibrator = Calibrator.fit(method, cal_proba, y_cal)
+            brier = float(brier_score_loss(y_fit, calibrator.calibrate_array(fit_proba)))
+            if best is None or brier < best[0]:
+                best = (brier, calibrator, method)
+        except Exception as exc:  # noqa: BLE001 - calibration is best-effort
+            logger.warning("calibration method %s failed: %s", method, exc)
+    if best is None:
+        return not_fitted
+    brier, calibrator, method = best
+    joblib.dump(calibrator, os.path.join(output_dir, CALIBRATED_FILE))
+    return {
+        "method": method,
+        "fitted": True,
+        "brier_score": round(brier, 4),
+        "n_samples": len(y_cal),
+    }
 
 
 def _register_in_db(db_url: str, metadata: dict) -> None:
@@ -184,7 +242,11 @@ def main() -> None:
     parser.add_argument("--output-dir", default=os.environ.get("MODEL_DIR", "/app/models"))
     parser.add_argument("--version", default="v1")
     parser.add_argument(
-        "--register-db", default=os.environ.get("DB_URL"), help="Postgres URL to register the model"
+        "--register-db",
+        nargs="?",
+        const=os.environ.get("DB_URL"),
+        default=None,
+        help="Postgres URL to register the model (defaults to DB_URL)",
     )
     args = parser.parse_args()
 

@@ -40,6 +40,39 @@ jobs:
       - name: Lint
         run: ruff check app training tests
 
+  bot-sim:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scripts/bot-sim
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install --no-save playwright-core
+      - name: Persona sanity tests
+        run: bun run test
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Build and start the stack
+        run: make up
+      - name: Install bot-sim deps and Playwright browsers
+        run: |
+          cd scripts/bot-sim && bun install
+          cd ../../frontend && bun install
+          bunx playwright install --with-deps chromium
+      - name: Seed and train
+        run: make seed && make train
+      - name: Smoke
+        run: ./scripts/smoke_test.sh
+      - name: End-to-end tests
+        working-directory: frontend
+        run: bun run test:e2e
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -50,6 +83,8 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - name: Install
         run: bun install
+      - name: Build SDK (ESM + CJS + types)
+        run: cd packages/stealthguard-sdk && bun run build
       - name: Test
         run: bun run test
       - name: Lint

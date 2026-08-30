@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.logstash.logback.marker.Markers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,43 +31,81 @@ public class TelemetryService {
     private final TelemetryEventRepository eventRepository;
     private final MlServiceClient mlClient;
     private final DecisionService decisionService;
+    private final boolean trialMode;
 
     public TelemetryService(
         SessionService sessionService,
         TelemetryEventRepository eventRepository,
         MlServiceClient mlClient,
-        DecisionService decisionService) {
+        DecisionService decisionService,
+        @org.springframework.beans.factory.annotation.Value("${stealthguard.trial-mode:false}") boolean trialMode) {
         this.sessionService = sessionService;
         this.eventRepository = eventRepository;
         this.mlClient = mlClient;
         this.decisionService = decisionService;
+        this.trialMode = trialMode;
     }
 
     @Transactional
     public DecisionResponse ingest(TelemetryRequest request) {
+        long start = System.nanoTime();
         Session session = sessionService.ensureFrom(request);
         if (request.meta() != null) {
             sessionService.applyMeta(session, request.meta());
         }
         persistEvents(session, request);
 
+        DecisionResponse response;
         try {
-            Map<String, Double> features = resolveFeatures(request);
-            MlServiceClient.ScoreDto score = mlClient.score(request.sessionId().toString(), features);
-            return decisionService.record(session, score);
+            MlServiceClient.FeatureResponse featureResp = resolveFeatures(request);
+            if (featureResp.shadow() != null) {
+                // Shadow-model output (Phase 9 A3): persisted with is_shadow=true, never a decision.
+                decisionService.recordShadow(session, featureResp.shadow().score(), featureResp.shadow().modelVersion());
+            }
+            MlServiceClient.ScoreDto score = mlClient.score(request.sessionId().toString(), featureResp.features());
+            response = decisionService.record(session, score, modalityOf(request), trialMode, latencyMs(start));
         } catch (RuntimeException e) {
             // Fail-safe boundary (ADR 0005): any ML path failure (timeout, retry
             // exhaustion, open circuit breaker) degrades to challenge, never allow.
             log.warn("session {} failing safe to challenge: {}", request.sessionId(), e.getMessage());
-            return decisionService.recordFailure(session, "ml-service unavailable");
+            response = decisionService.recordFailure(session, "ml-service unavailable", trialMode, latencyMs(start));
         }
+        if (trialMode) {
+            // Shadow trial (Phase 9 B1): the real decision is persisted above
+            // (trial_mode=true) but the caller always sees `allow`.
+            response = new DecisionResponse(
+                response.sessionId(), "allow", response.humannessScore(),
+                response.modelVersion(), response.reasonCodes());
+        }
+        log.info("telemetry processed",
+            Markers.append("session_id", request.sessionId().toString()),
+            Markers.append("latency_ms", latencyMs(start)),
+            Markers.append("decision", response.decision()),
+            Markers.append("trial_mode", trialMode),
+            Markers.append("events", totalEvents(request)));
+        return response;
     }
 
-    private Map<String, Double> resolveFeatures(TelemetryRequest request) {
+    private long latencyMs(long startNanos) {
+        return (System.nanoTime() - startNanos) / 1_000_000;
+    }
+
+    private String modalityOf(TelemetryRequest request) {
+        return request.meta() == null ? null : request.meta().inputModality();
+    }
+
+    private long totalEvents(TelemetryRequest request) {
+        return (request.keystrokes() == null ? 0 : request.keystrokes().size())
+            + (request.mouseMoves() == null ? 0 : request.mouseMoves().size())
+            + (request.touchMoves() == null ? 0 : request.touchMoves().size())
+            + (request.clicks() == null ? 0 : request.clicks().size());
+    }
+
+    private MlServiceClient.FeatureResponse resolveFeatures(TelemetryRequest request) {
         if (request.features() != null && !request.features().isEmpty()) {
-            return request.features();
+            return new MlServiceClient.FeatureResponse(request.features(), null);
         }
-        return mlClient.computeFeatures(rawTelemetry(request)).features();
+        return mlClient.computeFeatures(rawTelemetry(request));
     }
 
     private void persistEvents(Session session, TelemetryRequest request) {
@@ -115,7 +154,8 @@ public class TelemetryService {
             "keystrokes", keys,
             "mouse_moves", rawPoints(request.mouseMoves()),
             "touch_moves", rawPoints(request.touchMoves()),
-            "clicks", rawPoints(request.clicks()));
+            "clicks", rawPoints(request.clicks()),
+            "signals", request.signals() == null ? Map.of() : request.signals());
     }
 
     private List<Map<String, Object>> rawPoints(List<TelemetryRequest.MouseMoveDto> moves) {

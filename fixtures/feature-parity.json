@@ -70,7 +70,12 @@
             "y": 300,
             "t": 1714045002.4
           }
-        ]
+        ],
+        "signals": {
+          "paste_events": 1,
+          "keyless_fills": 0,
+          "input_modality": "mouse"
+        }
       },
       "expected": {
         "keystroke_mean_hold_ms": 140.00005722045898,
@@ -84,7 +89,16 @@
         "mouse_idle_ratio": 0.13043485472016914,
         "mouse_direction_changes": 3.0,
         "session_duration_ms": 2300.0001907348633,
-        "event_count": 12.0
+        "event_count": 12.0,
+        "fitts_fit_error_ms": 0.0,
+        "arrival_to_click_latency_ms": 100.00014305114746,
+        "micro_tremor_px_per_s2": 507.73439757626085,
+        "digraph_mean_latency_ms": 425.00001192092896,
+        "digraph_std_latency_ms": 24.999916553639423,
+        "paste_event_count": 1.0,
+        "keyless_fill_count": 0.0,
+        "input_modality": 0.0,
+        "keystroke_share": 0.4166666666666667
       }
     },
     {
@@ -145,7 +159,18 @@
           }
         ],
         "touch_moves": [],
-        "clicks": []
+        "clicks": [
+          {
+            "x": 40,
+            "y": 40,
+            "t": 1714045000.25
+          }
+        ],
+        "signals": {
+          "paste_events": 0,
+          "keyless_fills": 0,
+          "input_modality": "keyboard"
+        }
       },
       "expected": {
         "keystroke_mean_hold_ms": 80.00001907348633,
@@ -159,36 +184,79 @@
         "mouse_idle_ratio": 0.5,
         "mouse_direction_changes": 0.0,
         "session_duration_ms": 400.00009536743164,
-        "event_count": 10.0
+        "event_count": 11.0,
+        "fitts_fit_error_ms": 0.0,
+        "arrival_to_click_latency_ms": 99.99990463256836,
+        "micro_tremor_px_per_s2": 0.0,
+        "digraph_mean_latency_ms": 79.99998331069946,
+        "digraph_std_latency_ms": 0.00010323827311807139,
+        "paste_event_count": 0.0,
+        "keyless_fill_count": 0.0,
+        "input_modality": 1.0,
+        "keystroke_share": 0.45454545454545453
       }
     },
     {
-      "name": "sparse",
+      "name": "screen-reader",
       "input": {
         "keystrokes": [
           {
-            "key": "x",
+            "key": "a",
             "down_time": 1714045000.0,
-            "up_time": 1714045000.1
+            "up_time": 1714045000.4
+          },
+          {
+            "key": "b",
+            "down_time": 1714045000.5,
+            "up_time": 1714045000.9
+          },
+          {
+            "key": "c",
+            "down_time": 1714045001.0,
+            "up_time": 1714045001.35
+          },
+          {
+            "key": "d",
+            "down_time": 1714045001.6,
+            "up_time": 1714045002.0
+          },
+          {
+            "key": "e",
+            "down_time": 1714045002.1,
+            "up_time": 1714045002.45
           }
         ],
         "mouse_moves": [],
         "touch_moves": [],
-        "clicks": []
+        "clicks": [],
+        "signals": {
+          "paste_events": 0,
+          "keyless_fills": 0,
+          "input_modality": "keyboard"
+        }
       },
       "expected": {
-        "keystroke_mean_hold_ms": 99.99990463256836,
-        "keystroke_std_hold_ms": 0.0,
-        "keystroke_mean_interkey_ms": 0.0,
-        "keystroke_std_interkey_ms": 0.0,
-        "typing_speed_chars_per_s": 10.000009536752259,
+        "keystroke_mean_hold_ms": 380.00006675720215,
+        "keystroke_std_hold_ms": 24.494932468179652,
+        "keystroke_mean_interkey_ms": 524.9999761581421,
+        "keystroke_std_interkey_ms": 43.301228893912686,
+        "typing_speed_chars_per_s": 2.040816286810733,
         "mouse_mean_speed_px_per_s": 0.0,
         "mouse_std_speed_px_per_s": 0.0,
         "mouse_path_efficiency": 0.0,
         "mouse_idle_ratio": 1.0,
         "mouse_direction_changes": 0.0,
-        "session_duration_ms": 99.99990463256836,
-        "event_count": 1.0
+        "session_duration_ms": 2450.000047683716,
+        "event_count": 5.0,
+        "fitts_fit_error_ms": 0.0,
+        "arrival_to_click_latency_ms": 0.0,
+        "micro_tremor_px_per_s2": 0.0,
+        "digraph_mean_latency_ms": 524.9999761581421,
+        "digraph_std_latency_ms": 43.301228893912686,
+        "paste_event_count": 0.0,
+        "keyless_fill_count": 0.0,
+        "input_modality": 1.0,
+        "keystroke_share": 1.0
       }
     },
     {
@@ -197,7 +265,8 @@
         "keystrokes": [],
         "mouse_moves": [],
         "touch_moves": [],
-        "clicks": []
+        "clicks": [],
+        "signals": {}
       },
       "expected": {
         "keystroke_mean_hold_ms": 0.0,
@@ -211,7 +280,16 @@
         "mouse_idle_ratio": 0.0,
         "mouse_direction_changes": 0.0,
         "session_duration_ms": 0.0,
-        "event_count": 0.0
+        "event_count": 0.0,
+        "fitts_fit_error_ms": 0.0,
+        "arrival_to_click_latency_ms": 0.0,
+        "micro_tremor_px_per_s2": 0.0,
+        "digraph_mean_latency_ms": 0.0,
+        "digraph_std_latency_ms": 0.0,
+        "paste_event_count": 0.0,
+        "keyless_fill_count": 0.0,
+        "input_modality": 0.0,
+        "keystroke_share": 0.0
       }
     }
   ]

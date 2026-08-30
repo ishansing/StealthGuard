@@ -34,6 +34,12 @@ public class Decision {
 
     private String reason;
 
+    @Column(name = "trial_mode", nullable = false)
+    private boolean trialMode;
+
+    @Column(name = "latency_ms")
+    private Integer latencyMs;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 }
