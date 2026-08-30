@@ -13,12 +13,12 @@ export default defineConfig({
     {
       command: 'bun run dev',
       url: 'http://localhost:5173',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
     },
     {
       command: 'bun run dev:admin',
       url: 'http://localhost:5174',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
     },
   ],
 })

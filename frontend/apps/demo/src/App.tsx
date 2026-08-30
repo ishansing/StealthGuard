@@ -83,7 +83,8 @@ export default function App() {
   const { decision, ready, flush, respondChallenge } = useStealthGuard({
     gatewayUrl: GATEWAY_URL,
     page: '/login',
-    flushIntervalMs: 5000,
+    // Score a login as one batch; the submit flush carries the full interaction.
+    flushIntervalMs: 60000,
   })
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')

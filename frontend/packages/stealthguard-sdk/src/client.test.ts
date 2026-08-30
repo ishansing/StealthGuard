@@ -155,7 +155,11 @@ describe('StealthGuardClient', () => {
 
   it('captures paste and keyless (autofill) signals', async () => {
     const fetchMock = mockFetch()
-    const client = new StealthGuardClient({ gatewayUrl: 'http://gw', flushIntervalMs: 0, sessionId: 's-1' })
+    const client = new StealthGuardClient({
+      gatewayUrl: 'http://gw',
+      flushIntervalMs: 0,
+      sessionId: 's-1',
+    })
     await client.init()
 
     document.dispatchEvent(new Event('paste'))

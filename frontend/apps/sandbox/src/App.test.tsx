@@ -12,7 +12,11 @@ function stubFetch(): ReturnType<typeof vi.fn> {
     if (url.includes('/stealthguard/telemetry') || url.includes('/stealthguard/score')) {
       return Promise.resolve({
         ok: true,
-        json: async () => ({ decision: 'allow', humanness_score: 0.9, reason_codes: [{ code: 'natural_keystroke_variance', weight: 0.5 }] }),
+        json: async () => ({
+          decision: 'allow',
+          humanness_score: 0.9,
+          reason_codes: [{ code: 'natural_keystroke_variance', weight: 0.5 }],
+        }),
       })
     }
     return Promise.resolve({ ok: true, json: async () => ({}) })
@@ -51,6 +55,8 @@ describe('Sandbox', () => {
     stubFetch()
     render(<App />)
     // Default (no decision yet) marker sits at the center (50%).
-    expect(screen.getByTestId('rhythm-line').querySelector('.rhythm-marker')?.getAttribute('style')).toContain('50%')
+    expect(
+      screen.getByTestId('rhythm-line').querySelector('.rhythm-marker')?.getAttribute('style'),
+    ).toContain('50%')
   })
 })
