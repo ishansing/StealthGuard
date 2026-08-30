@@ -23,10 +23,13 @@ async function humanLikeMouse(page: Page): Promise<void> {
     [300, 180],
     [240, 260],
     [340, 220],
+    [280, 330],
+    [400, 300],
+    [360, 380],
   ] as const
   for (const [x, y] of path) {
     await page.mouse.move(x, y, { steps: 4 })
-    await page.waitForTimeout(120 + Math.random() * 150)
+    await page.waitForTimeout(120 + Math.random() * 180)
   }
 }
 
@@ -36,8 +39,10 @@ test('human-like interaction resolves to allow', async ({ page }) => {
   await expect(signIn).toBeEnabled({ timeout: 15000 })
 
   await humanLikeType(page, '#username', 'alice')
+  await page.waitForTimeout(400 + Math.random() * 300) // pause to reconsider
   await humanLikeMouse(page)
-  await humanLikeType(page, '#password', 'secret123')
+  await humanLikeType(page, '#password', 'secret2026')
+  await page.waitForTimeout(200 + Math.random() * 200)
   await signIn.click()
 
   const result = page.getByTestId('submit-decision')
