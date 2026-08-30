@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Smoke test: assert every service's health endpoint returns HTTP 200.
-# Reused and expanded in Phase 7.
+# Retries each check for up to ~30s so a service restarting between steps
+# (e.g. `make train` restarts ml-service) doesn't cause a false failure.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -17,14 +18,17 @@ PGDB="${POSTGRES_DB:-stealthguard}"
 
 check() {
   local name="$1" url="$2"
-  local code
-  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$url" || true)
-  if [ "$code" = "200" ]; then
-    echo "OK   $name ($url)"
-  else
-    echo "FAIL $name ($url) -> HTTP ${code:-no response}"
-    exit 1
-  fi
+  local code=""
+  for _ in $(seq 1 10); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$url" || true)
+    if [ "$code" = "200" ]; then
+      echo "OK   $name ($url)"
+      return 0
+    fi
+    sleep 3
+  done
+  echo "FAIL $name ($url) -> HTTP ${code:-no response}"
+  exit 1
 }
 
 check "ml_service"   http://localhost:8000/health
