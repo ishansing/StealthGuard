@@ -50,9 +50,8 @@ train:
 retrain:
 	$(COMPOSE) run --rm -v ./scripts:/scripts:ro -v ./scripts/bot-sim/out:/data ml-service python /scripts/retrain_from_feedback.py --data /data/sessions.csv --models-dir /app/models --report /data/retrain-report.md
 
-# Phase 8: optional Prometheus + Grafana overlay (docker-compose.observability.yml).
-observability:
-	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml up -d prometheus grafana
+logs:
+	$(COMPOSE) logs -f --tail=50
 
 # Phase 9 B1: generate the shadow-trial confidence report from trial-mode decisions.
 report:
