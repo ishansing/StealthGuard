@@ -74,9 +74,15 @@ describe('StealthGuardClient autoInstrument (Phase 9 B2)', () => {
   it('autoInstrument: false (default) does not touch forms', async () => {
     mockFetch()
     document.body.innerHTML = '<form id="login"></form>'
-    const client = new StealthGuardClient({ gatewayUrl: 'http://gw', flushIntervalMs: 0, sessionId: 's-1' })
+    const client = new StealthGuardClient({
+      gatewayUrl: 'http://gw',
+      flushIntervalMs: 0,
+      sessionId: 's-1',
+    })
 
     await client.start()
-    expect(client['instrumentedForms'].has(document.getElementById('login') as HTMLFormElement)).toBe(false)
+    expect(
+      client['instrumentedForms'].has(document.getElementById('login') as HTMLFormElement),
+    ).toBe(false)
   })
 })

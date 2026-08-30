@@ -164,7 +164,9 @@ function digraphTiming(
     list.push((downTimes[i + 1] - downTimes[i]) * 1000)
     pairLat.set(pair, list)
   }
-  const top = [...pairLat.entries()].sort((a, b) => b[1].length - a[1].length).slice(0, DIGRAPH_TOP_K)
+  const top = [...pairLat.entries()]
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, DIGRAPH_TOP_K)
   const all: number[] = top.flatMap(([, lats]) => lats)
   return [mean(all), std(all)]
 }
@@ -208,7 +210,14 @@ export function computeFeatures(raw: RawTelemetry): Features {
 
   const allMoves: Move[] = []
   for (const m of [...moves, ...touches]) {
-    if (m.x !== undefined && m.x !== null && m.y !== undefined && m.y !== null && m.t !== undefined && m.t !== null) {
+    if (
+      m.x !== undefined &&
+      m.x !== null &&
+      m.y !== undefined &&
+      m.y !== null &&
+      m.t !== undefined &&
+      m.t !== null
+    ) {
       allMoves.push([m.x, m.y, m.t])
       timestamps.push(m.t)
     }

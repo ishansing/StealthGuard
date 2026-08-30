@@ -125,7 +125,8 @@ export class StealthGuardClient {
         for (const mutation of mutations) {
           for (const node of mutation.addedNodes) {
             if (node instanceof HTMLFormElement) this.instrumentForm(node)
-            else if (node instanceof Element) this.instrumentForms(node.querySelectorAll(this.selector))
+            else if (node instanceof Element)
+              this.instrumentForms(node.querySelectorAll(this.selector))
           }
         }
       })

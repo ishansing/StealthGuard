@@ -28,7 +28,11 @@ const PERSONAS: Record<string, Telemetry> = {
       down_time: i * (0.13 + (i % 3) * 0.01),
       up_time: i * (0.13 + (i % 3) * 0.01) + 0.07,
     })),
-    mouse_moves: Array.from({ length: 6 }, (_, i) => ({ x: i * 20 + (i % 2) * 4, y: i * 12 + (i % 3) * 3, t: i * 0.1 })),
+    mouse_moves: Array.from({ length: 6 }, (_, i) => ({
+      x: i * 20 + (i % 2) * 4,
+      y: i * 12 + (i % 3) * 3,
+      t: i * 0.1,
+    })),
   },
   'tremor user': {
     keystrokes: Array.from({ length: 8 }, (_, i) => ({
@@ -36,7 +40,11 @@ const PERSONAS: Record<string, Telemetry> = {
       down_time: i * (0.16 + (i % 2) * 0.05),
       up_time: i * (0.16 + (i % 2) * 0.05) + 0.09 + (i % 2) * 0.03,
     })),
-    mouse_moves: Array.from({ length: 10 }, (_, i) => ({ x: 40 + i * 15 + ((i % 2) ? 5 : -4), y: 40 + i * 8 + ((i % 3) ? 3 : -5), t: i * 0.09 })),
+    mouse_moves: Array.from({ length: 10 }, (_, i) => ({
+      x: 40 + i * 15 + (i % 2 ? 5 : -4),
+      y: 40 + i * 8 + (i % 3 ? 3 : -5),
+      t: i * 0.09,
+    })),
   },
   'human-like': {
     keystrokes: Array.from({ length: 8 }, (_, i) => ({
@@ -87,7 +95,10 @@ export default function App() {
       }),
     })
     const body = (await res.json()) as { decision: string; humanness_score: number | null }
-    setPersonaResults((prev) => ({ ...prev, [name]: { decision: body.decision, score: body.humanness_score } }))
+    setPersonaResults((prev) => ({
+      ...prev,
+      [name]: { decision: body.decision, score: body.humanness_score },
+    }))
   }
 
   const score = decision?.humanness_score ?? 0.5
@@ -134,7 +145,11 @@ export default function App() {
         <p>How would the system treat different inputs? Try the bot-simulator shapes.</p>
         <div className="personas">
           {Object.keys(PERSONAS).map((name) => (
-            <button key={name} onClick={() => void runPersona(name)} data-testid={`persona-${name}`}>
+            <button
+              key={name}
+              onClick={() => void runPersona(name)}
+              data-testid={`persona-${name}`}
+            >
               {name}
             </button>
           ))}
