@@ -12,6 +12,7 @@ import {
 import { SessionDetail as SessionDetailPanel } from './components/SessionDetail'
 import { SessionTable } from './components/SessionTable'
 import { StatsCharts } from './components/StatsCharts'
+import { TelemetryCharts } from './components/TelemetryCharts'
 
 type View = 'overview' | 'sessions'
 
@@ -54,6 +55,8 @@ export default function App() {
     }
   }
 
+  const recentSessions = sessions.slice(0, 2)
+
   return (
     <div className="admin-layout">
       <nav className="sidebar" aria-label="Main navigation">
@@ -77,10 +80,6 @@ export default function App() {
             <span className="material-symbols-outlined" style={view === 'overview' ? { fontVariationSettings: "'FILL' 1" } : undefined}>dashboard</span>
             <span>Overview</span>
           </button>
-          <button className="sidebar-link" disabled>
-            <span className="material-symbols-outlined">monitoring</span>
-            <span>Telemetry</span>
-          </button>
           <button
             className={`sidebar-link ${view === 'sessions' ? 'active' : ''}`}
             onClick={() => setView('sessions')}
@@ -88,29 +87,11 @@ export default function App() {
             <span className="material-symbols-outlined" style={view === 'sessions' ? { fontVariationSettings: "'FILL' 1" } : undefined}>group</span>
             <span>Sessions</span>
           </button>
-          <button className="sidebar-link" disabled>
-            <span className="material-symbols-outlined">tune</span>
-            <span>Settings</span>
-          </button>
-          <button className="sidebar-link" disabled>
-            <span className="material-symbols-outlined">list_alt</span>
-            <span>Logs</span>
-          </button>
         </div>
         <div className="sidebar-footer">
           <button className="sidebar-action" disabled>
             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>play_arrow</span>
             INITIATE SCAN
-          </button>
-        </div>
-        <div className="sidebar-bottom">
-          <button className="sidebar-link" disabled>
-            <span className="material-symbols-outlined">help_outline</span>
-            <span>Help</span>
-          </button>
-          <button className="sidebar-link" disabled>
-            <span className="material-symbols-outlined">logout</span>
-            <span>Logout</span>
           </button>
         </div>
       </nav>
@@ -129,8 +110,9 @@ export default function App() {
           {view === 'overview' && (
             <>
               <StatsCharts stats={stats} />
+              <TelemetryCharts sessions={sessions} />
               <SessionTable
-                sessions={sessions}
+                sessions={recentSessions}
                 selectedId={selectedId}
                 onSelect={(id) => {
                   setSelectedId(id)
