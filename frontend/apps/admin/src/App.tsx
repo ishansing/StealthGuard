@@ -56,8 +56,7 @@ export default function App() {
 
   return (
     <div className="admin-layout">
-      {/* Sidebar */}
-      <nav className="sidebar">
+      <nav className="sidebar" aria-label="Main navigation">
         <div className="sidebar-brand">
           <h1>STEALTHGUARD_OS</h1>
         </div>
@@ -75,7 +74,7 @@ export default function App() {
             className={`sidebar-link ${view === 'overview' ? 'active' : ''}`}
             onClick={() => setView('overview')}
           >
-            <span className="material-symbols-outlined">dashboard</span>
+            <span className="material-symbols-outlined" style={view === 'overview' ? { fontVariationSettings: "'FILL' 1" } : undefined}>dashboard</span>
             <span>Overview</span>
           </button>
           <button className="sidebar-link" disabled>
@@ -86,7 +85,7 @@ export default function App() {
             className={`sidebar-link ${view === 'sessions' ? 'active' : ''}`}
             onClick={() => setView('sessions')}
           >
-            <span className="material-symbols-outlined">group</span>
+            <span className="material-symbols-outlined" style={view === 'sessions' ? { fontVariationSettings: "'FILL' 1" } : undefined}>group</span>
             <span>Sessions</span>
           </button>
           <button className="sidebar-link" disabled>
@@ -100,9 +99,7 @@ export default function App() {
         </div>
         <div className="sidebar-footer">
           <button className="sidebar-action" disabled>
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-              play_arrow
-            </span>
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>play_arrow</span>
             INITIATE SCAN
           </button>
         </div>
@@ -118,7 +115,6 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Main Content */}
       <div className="admin-main">
         <header className="top-nav">
           <span className="top-nav-title">ADMIN</span>
@@ -145,7 +141,11 @@ export default function App() {
           )}
           {view === 'sessions' && (
             <>
-              <SessionTable sessions={sessions} selectedId={selectedId} onSelect={setSelectedId} />
+              <SessionTable
+                sessions={sessions}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+              />
               <SessionDetailPanel
                 detail={detail}
                 feedbackStatus={feedbackStatus}

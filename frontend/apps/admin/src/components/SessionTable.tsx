@@ -27,9 +27,7 @@ export function SessionTable({
           <tbody>
             {sessions.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ color: 'var(--muted)', textAlign: 'center' }}>
-                  No sessions yet.
-                </td>
+                <td colSpan={6} style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}>No sessions yet.</td>
               </tr>
             )}
             {sessions.map((s) => (

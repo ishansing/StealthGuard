@@ -22,7 +22,7 @@ function MousePathCanvas({ events }: { events: TelemetryEvent[] }) {
     const maxX = Math.max(...xs)
     const minY = Math.min(...ys)
     const maxY = Math.max(...ys)
-    const pad = 10
+    const pad = 16
     const scale = Math.min(
       (canvas.width - pad * 2) / Math.max(1, maxX - minX),
       (canvas.height - pad * 2) / Math.max(1, maxY - minY),
@@ -30,6 +30,8 @@ function MousePathCanvas({ events }: { events: TelemetryEvent[] }) {
 
     ctx.strokeStyle = 'var(--primary-light)'
     ctx.lineWidth = 2
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
     ctx.beginPath()
     moves.forEach((m, i) => {
       const x = (m.x - minX) * scale + pad
@@ -38,6 +40,12 @@ function MousePathCanvas({ events }: { events: TelemetryEvent[] }) {
       else ctx.lineTo(x, y)
     })
     ctx.stroke()
+
+    const last = moves[moves.length - 1]
+    ctx.fillStyle = '#fff'
+    ctx.beginPath()
+    ctx.arc((last.x - minX) * scale + pad, (last.y - minY) * scale + pad, 3, 0, Math.PI * 2)
+    ctx.fill()
   }, [events])
 
   return (
@@ -64,9 +72,7 @@ function KeystrokeChart({ events }: { events: TelemetryEvent[] }) {
       role="img"
       aria-label="Keystroke hold times"
     >
-      {keys.length === 0 && (
-        <p style={{ color: 'var(--muted)', padding: '0.5rem' }}>No keystrokes recorded.</p>
-      )}
+      {keys.length === 0 && <p style={{ color: 'var(--muted)', padding: '0.75rem', fontSize: '0.85rem' }}>No keystrokes recorded.</p>}
       {keys.map((hold, i) => (
         <div
           key={i}
@@ -91,22 +97,22 @@ export function SessionDetail({
   if (!detail) return <p className="hint">Select a session to inspect it.</p>
 
   const decisionColor =
-    detail.decision === 'allow'
-      ? 'var(--success)'
-      : detail.decision === 'block'
-        ? 'var(--danger)'
-        : 'var(--warning)'
+    detail.decision === 'allow' ? 'var(--success)' :
+    detail.decision === 'block' ? 'var(--danger)' :
+    'var(--warning)'
 
   return (
     <section className="detail-section" aria-label="Session detail">
       <div className="detail-header">
         <h2>Session {detail.session_id.slice(0, 8)}</h2>
-        <span className="meta">Model: {detail.model_version ?? '—'}</span>
+        <span className="meta">
+          Model: {detail.model_version ?? '—'}
+        </span>
       </div>
       <div className="detail-body">
-        <p style={{ marginBottom: '0.5rem' }}>
-          Decision: <strong style={{ color: decisionColor }}>{detail.decision ?? '—'}</strong> ·
-          Score: {detail.humanness_score?.toFixed(3) ?? '—'}
+        <p style={{ marginBottom: '0.75rem' }}>
+          Decision: <strong style={{ color: decisionColor }}>{detail.decision ?? '—'}</strong> · Score:{' '}
+          {detail.humanness_score?.toFixed(3) ?? '—'}
         </p>
 
         {detail.reason_codes.length > 0 && (
@@ -132,7 +138,7 @@ export function SessionDetail({
       </div>
 
       <div className="reviewer">
-        <span style={{ color: 'var(--muted)' }}>Reviewer feedback:</span>
+        <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Reviewer feedback:</span>
         <button type="button" onClick={() => onFeedback('human')} data-testid="mark-human">
           Mark as human
         </button>
