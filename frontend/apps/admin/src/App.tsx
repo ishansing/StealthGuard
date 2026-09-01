@@ -55,8 +55,6 @@ export default function App() {
     }
   }
 
-  const recentSessions = sessions.slice(0, 2)
-
   return (
     <div className="admin-layout">
       <nav className="sidebar" aria-label="Main navigation">
@@ -112,7 +110,7 @@ export default function App() {
               <StatsCharts stats={stats} />
               <TelemetryCharts sessions={sessions} />
               <SessionTable
-                sessions={recentSessions}
+                sessions={sessions.slice(0, 2)}
                 selectedId={selectedId}
                 onSelect={(id) => {
                   setSelectedId(id)
