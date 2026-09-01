@@ -186,6 +186,36 @@ button:disabled {
   gap: 1rem;
 }
 
+.viz-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+.viz-active-persona {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.viz-clear-btn {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  background: transparent;
+  color: #888;
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+.viz-clear-btn:hover {
+  background: #333;
+  color: #e5e5e5;
+}
+
 .viz-label {
   font-size: 0.85rem;
   font-weight: 600;

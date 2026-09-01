@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useStealthGuard } from '@stealthguard/sdk'
 import { KeystrokeVisualizer } from './components/KeystrokeVisualizer'
 import { MousePathCanvas } from './components/MousePathCanvas'
@@ -93,6 +93,7 @@ export default function App() {
   })
 
   const [personaResults, setPersonaResults] = useState<Record<string, PersonaResult>>({})
+  const [activePersona, setActivePersona] = useState<string | null>(null)
   const runAllInProgress = useRef(false)
 
   const onSubmit = (e: FormEvent): void => {
@@ -101,6 +102,7 @@ export default function App() {
   }
 
   const runPersona = useCallback(async (name: string): Promise<void> => {
+    setActivePersona(name)
     const payload = PERSONAS[name]
     const res = await fetch(`${GATEWAY_URL}/stealthguard/telemetry`, {
       method: 'POST',
@@ -131,6 +133,20 @@ export default function App() {
     runAllInProgress.current = false
   }, [runPersona])
 
+  const personaVizKeystrokes = useMemo(() => {
+    if (!activePersona) return null
+    return PERSONAS[activePersona].keystrokes.map((k) => ({
+      key: k.key,
+      holdMs: Math.round((k.up_time - k.down_time) * 1000),
+    }))
+  }, [activePersona])
+
+  const personaVizPoints = useMemo(() => {
+    if (!activePersona) return null
+    return PERSONAS[activePersona].mouse_moves
+  }, [activePersona])
+
+  const showLive = activePersona === null
   const score = decision?.humanness_score ?? 0.5
   const rhythmLeft = `${Math.round(score * 100)}%`
 
@@ -180,8 +196,22 @@ export default function App() {
         </div>
 
         <div className="live-viz">
-          <KeystrokeVisualizer keystrokes={keystrokeBuffer.current} />
-          <MousePathCanvas points={mouseBuffer.current} />
+          {activePersona && (
+            <div className="viz-header">
+              <span className="viz-active-persona">Viewing: {activePersona}</span>
+              <button
+                type="button"
+                className="viz-clear-btn"
+                onClick={() => setActivePersona(null)}
+              >
+                ← Back to live
+              </button>
+            </div>
+          )}
+          <KeystrokeVisualizer
+            keystrokes={showLive ? keystrokeBuffer.current : (personaVizKeystrokes ?? [])}
+          />
+          <MousePathCanvas points={showLive ? mouseBuffer.current : (personaVizPoints ?? [])} />
         </div>
       </div>
 
