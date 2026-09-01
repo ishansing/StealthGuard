@@ -1,169 +1,221 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>StealthGuard Demo - Login</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "on-primary": "#133154",
-                        "surface-container-lowest": "#0e0e0e",
-                        "background": "#131313",
-                        "tertiary-fixed-dim": "#ebc07e",
-                        "on-secondary-fixed": "#1a1d13",
-                        "on-tertiary": "#432c00",
-                        "inverse-primary": "#456085",
-                        "surface": "#1A1A1A",
-                        "on-surface": "#e5e2e1",
-                        "surface-container-high": "#2a2a2a",
-                        "surface-container-low": "#1c1b1b",
-                        "tertiary-container": "#b18a4e",
-                        "muted-text": "#888888",
-                        "error": "#ffb4ab",
-                        "inverse-on-surface": "#313030",
-                        "on-secondary": "#2f3227",
-                        "surface-bright": "#3a3939",
-                        "inverse-surface": "#e5e2e1",
-                        "secondary-container": "#45483c",
-                        "border": "#2D2D2D",
-                        "on-tertiary-fixed-variant": "#5f410a",
-                        "primary-container": "#7792bb",
-                        "on-surface-variant": "#c4c6cf",
-                        "primary-fixed": "#d4e3ff",
-                        "surface-container-highest": "#353534",
-                        "on-tertiary-fixed": "#281800",
-                        "on-error-container": "#ffdad6",
-                        "surface-tint": "#adc8f3",
-                        "primary": "#adc8f3",
-                        "secondary-fixed": "#e2e4d3",
-                        "error-container": "#93000a",
-                        "on-error": "#690005",
-                        "tertiary-fixed": "#ffddae",
-                        "on-tertiary-container": "#3b2600",
-                        "primary-fixed-dim": "#adc8f3",
-                        "tertiary": "#ebc07e",
-                        "outline-variant": "#43474e",
-                        "action-blue": "#6C87AF",
-                        "on-secondary-container": "#b5b6a7",
-                        "success-sage": "#A7A99A",
-                        "danger-red": "#EF4444",
-                        "surface-container": "#201f1f",
-                        "on-primary-fixed-variant": "#2c486c",
-                        "on-primary-fixed": "#001c39",
-                        "on-secondary-fixed-variant": "#45483c",
-                        "on-primary-container": "#092a4d",
-                        "on-background": "#e5e2e1",
-                        "secondary-fixed-dim": "#c6c8b8",
-                        "surface-variant": "#353534",
-                        "outline": "#8d9199",
-                        "surface-dim": "#131313",
-                        "secondary": "#c6c8b8",
-                        "warning-amber": "#FBBF24"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.125rem",
-                        "lg": "0.25rem",
-                        "xl": "0.5rem",
-                        "full": "0.75rem"
-                    },
-                    "spacing": {
-                        "lg": "1.5rem",
-                        "md": "1rem",
-                        "sm": "0.5rem",
-                        "xs": "0.25rem",
-                        "xl": "2rem",
-                        "gutter": "1px"
-                    },
-                    "fontFamily": {
-                        "h2": ["system-ui"],
-                        "h1": ["system-ui"],
-                        "metric-lg": ["system-ui"],
-                        "tiny": ["system-ui"],
-                        "body": ["system-ui"],
-                        "small": ["system-ui"]
-                    },
-                    "fontSize": {
-                        "h2": ["1.1rem", { "lineHeight": "1.5", "letterSpacing": "0.05em", "fontWeight": "600" }],
-                        "h1": ["1.5rem", { "lineHeight": "1.5", "letterSpacing": "-0.02em", "fontWeight": "700" }],
-                        "metric-lg": ["3rem", { "lineHeight": "1.1", "fontWeight": "700" }],
-                        "tiny": ["0.75rem", { "lineHeight": "1.5", "letterSpacing": "0.1em", "fontWeight": "400" }],
-                        "body": ["1rem", { "lineHeight": "1.5", "fontWeight": "400" }],
-                        "small": ["0.85rem", { "lineHeight": "1.5", "fontWeight": "400" }]
-                    }
-                }
-            }
-        }
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>StealthGuard Demo - Login</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'on-primary': '#133154',
+              'surface-container-lowest': '#0e0e0e',
+              background: '#131313',
+              'tertiary-fixed-dim': '#ebc07e',
+              'on-secondary-fixed': '#1a1d13',
+              'on-tertiary': '#432c00',
+              'inverse-primary': '#456085',
+              surface: '#1A1A1A',
+              'on-surface': '#e5e2e1',
+              'surface-container-high': '#2a2a2a',
+              'surface-container-low': '#1c1b1b',
+              'tertiary-container': '#b18a4e',
+              'muted-text': '#888888',
+              error: '#ffb4ab',
+              'inverse-on-surface': '#313030',
+              'on-secondary': '#2f3227',
+              'surface-bright': '#3a3939',
+              'inverse-surface': '#e5e2e1',
+              'secondary-container': '#45483c',
+              border: '#2D2D2D',
+              'on-tertiary-fixed-variant': '#5f410a',
+              'primary-container': '#7792bb',
+              'on-surface-variant': '#c4c6cf',
+              'primary-fixed': '#d4e3ff',
+              'surface-container-highest': '#353534',
+              'on-tertiary-fixed': '#281800',
+              'on-error-container': '#ffdad6',
+              'surface-tint': '#adc8f3',
+              primary: '#adc8f3',
+              'secondary-fixed': '#e2e4d3',
+              'error-container': '#93000a',
+              'on-error': '#690005',
+              'tertiary-fixed': '#ffddae',
+              'on-tertiary-container': '#3b2600',
+              'primary-fixed-dim': '#adc8f3',
+              tertiary: '#ebc07e',
+              'outline-variant': '#43474e',
+              'action-blue': '#6C87AF',
+              'on-secondary-container': '#b5b6a7',
+              'success-sage': '#A7A99A',
+              'danger-red': '#EF4444',
+              'surface-container': '#201f1f',
+              'on-primary-fixed-variant': '#2c486c',
+              'on-primary-fixed': '#001c39',
+              'on-secondary-fixed-variant': '#45483c',
+              'on-primary-container': '#092a4d',
+              'on-background': '#e5e2e1',
+              'secondary-fixed-dim': '#c6c8b8',
+              'surface-variant': '#353534',
+              outline: '#8d9199',
+              'surface-dim': '#131313',
+              secondary: '#c6c8b8',
+              'warning-amber': '#FBBF24',
+            },
+            borderRadius: {
+              DEFAULT: '0.125rem',
+              lg: '0.25rem',
+              xl: '0.5rem',
+              full: '0.75rem',
+            },
+            spacing: {
+              lg: '1.5rem',
+              md: '1rem',
+              sm: '0.5rem',
+              xs: '0.25rem',
+              xl: '2rem',
+              gutter: '1px',
+            },
+            fontFamily: {
+              h2: ['system-ui'],
+              h1: ['system-ui'],
+              'metric-lg': ['system-ui'],
+              tiny: ['system-ui'],
+              body: ['system-ui'],
+              small: ['system-ui'],
+            },
+            fontSize: {
+              h2: ['1.1rem', { lineHeight: '1.5', letterSpacing: '0.05em', fontWeight: '600' }],
+              h1: ['1.5rem', { lineHeight: '1.5', letterSpacing: '-0.02em', fontWeight: '700' }],
+              'metric-lg': ['3rem', { lineHeight: '1.1', fontWeight: '700' }],
+              tiny: ['0.75rem', { lineHeight: '1.5', letterSpacing: '0.1em', fontWeight: '400' }],
+              body: ['1rem', { lineHeight: '1.5', fontWeight: '400' }],
+              small: ['0.85rem', { lineHeight: '1.5', fontWeight: '400' }],
+            },
+          },
+        },
+      }
     </script>
-<style>
-        body { background-color: #0D0D0D; color: #e5e2e1; }
-        .dashed-border { border: 1px dashed var(--border); }
-        .input-bg { background-color: #0D0D0D; }
-        .panel-bg { background-color: #1A1A1A; }
+    <style>
+      body {
+        background-color: #0d0d0d;
+        color: #e5e2e1;
+      }
+      .dashed-border {
+        border: 1px dashed var(--border);
+      }
+      .input-bg {
+        background-color: #0d0d0d;
+      }
+      .panel-bg {
+        background-color: #1a1a1a;
+      }
     </style>
-</head>
-<body class="min-h-screen flex items-center justify-center p-md">
-<div class="w-full max-w-[30rem] flex flex-col gap-xl">
-<!-- Header Section -->
-<header class="text-center flex flex-col gap-sm">
-<h1 class="font-h1 text-h1 text-primary">StealthGuard Demo</h1>
-<p class="font-body text-body text-muted-text">Passive bot detection — no CAPTCHA needed.</p>
-</header>
-<!-- Live Decision Status Panel -->
-<div class="panel-bg dashed-border p-md flex flex-col gap-md">
-<div class="flex justify-between items-center border-b border-border pb-sm">
-<span class="font-tiny text-tiny uppercase tracking-widest text-muted-text">Telemetry Status</span>
-<span class="flex items-center gap-xs font-small text-small text-success-sage">
-<span class="material-symbols-outlined text-[16px]">check_circle</span>
-                    Analyzing
-                </span>
-</div>
-<div class="grid grid-cols-2 gap-md">
-<div class="flex flex-col gap-xs">
-<span class="font-tiny text-tiny uppercase text-muted-text">Decision</span>
-<span class="font-h2 text-h2 text-success-sage">ALLOW</span>
-</div>
-<div class="flex flex-col gap-xs text-right">
-<span class="font-tiny text-tiny uppercase text-muted-text">Risk Score</span>
-<span class="font-h2 text-h2 text-on-surface">0.05</span>
-</div>
-</div>
-<div class="border-t border-border pt-sm mt-xs">
-<span class="font-tiny text-tiny uppercase text-muted-text block mb-xs">Reason Codes</span>
-<div class="flex gap-sm">
-<span class="font-tiny text-tiny bg-surface-container-high px-sm py-xs border border-border text-on-surface-variant">HUMAN_TIMING</span>
-<span class="font-tiny text-tiny bg-surface-container-high px-sm py-xs border border-border text-on-surface-variant">VALID_IP</span>
-</div>
-</div>
-</div>
-<!-- Login Form -->
-<form class="panel-bg border border-border flex flex-col p-lg gap-lg">
-<h2 class="font-h2 text-h2 text-on-surface mb-sm border-b border-border pb-sm">Authenticate</h2>
-<div class="flex flex-col gap-xs">
-<label class="font-tiny text-tiny uppercase text-muted-text" for="username">Username</label>
-<input class="input-bg border border-border p-sm font-body text-body text-on-surface focus:border-action-blue focus:outline-none transition-colors" id="username" name="username" placeholder="user@example.com" type="text"/>
-</div>
-<div class="flex flex-col gap-xs">
-<label class="font-tiny text-tiny uppercase text-muted-text" for="password">Password</label>
-<input class="input-bg border border-border p-sm font-body text-body text-on-surface focus:border-action-blue focus:outline-none transition-colors" id="password" name="password" placeholder="••••••••" type="password"/>
-</div>
-<button class="bg-action-blue text-on-primary font-h2 text-h2 p-sm mt-sm hover:opacity-90 active:scale-95 transition-all w-full flex justify-center items-center gap-sm" type="button">
-<span>LOGIN</span>
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">login</span>
-</button>
-</form>
-<!-- Footer -->
-<footer class="text-center mt-md border-t border-border pt-md">
-<p class="font-tiny text-tiny text-muted-text uppercase tracking-widest">
-<span class="material-symbols-outlined text-[14px] align-middle mr-xs">monitoring</span>
-                Session is actively monitored by StealthGuard OS
-            </p>
-</footer>
-</div>
-</body></html>
+  </head>
+  <body class="min-h-screen flex items-center justify-center p-md">
+    <div class="w-full max-w-[30rem] flex flex-col gap-xl">
+      <!-- Header Section -->
+      <header class="text-center flex flex-col gap-sm">
+        <h1 class="font-h1 text-h1 text-primary">StealthGuard Demo</h1>
+        <p class="font-body text-body text-muted-text">
+          Passive bot detection — no CAPTCHA needed.
+        </p>
+      </header>
+      <!-- Live Decision Status Panel -->
+      <div class="panel-bg dashed-border p-md flex flex-col gap-md">
+        <div class="flex justify-between items-center border-b border-border pb-sm">
+          <span class="font-tiny text-tiny uppercase tracking-widest text-muted-text"
+            >Telemetry Status</span
+          >
+          <span class="flex items-center gap-xs font-small text-small text-success-sage">
+            <span class="material-symbols-outlined text-[16px]">check_circle</span>
+            Analyzing
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-md">
+          <div class="flex flex-col gap-xs">
+            <span class="font-tiny text-tiny uppercase text-muted-text">Decision</span>
+            <span class="font-h2 text-h2 text-success-sage">ALLOW</span>
+          </div>
+          <div class="flex flex-col gap-xs text-right">
+            <span class="font-tiny text-tiny uppercase text-muted-text">Risk Score</span>
+            <span class="font-h2 text-h2 text-on-surface">0.05</span>
+          </div>
+        </div>
+        <div class="border-t border-border pt-sm mt-xs">
+          <span class="font-tiny text-tiny uppercase text-muted-text block mb-xs"
+            >Reason Codes</span
+          >
+          <div class="flex gap-sm">
+            <span
+              class="font-tiny text-tiny bg-surface-container-high px-sm py-xs border border-border text-on-surface-variant"
+              >HUMAN_TIMING</span
+            >
+            <span
+              class="font-tiny text-tiny bg-surface-container-high px-sm py-xs border border-border text-on-surface-variant"
+              >VALID_IP</span
+            >
+          </div>
+        </div>
+      </div>
+      <!-- Login Form -->
+      <form class="panel-bg border border-border flex flex-col p-lg gap-lg">
+        <h2 class="font-h2 text-h2 text-on-surface mb-sm border-b border-border pb-sm">
+          Authenticate
+        </h2>
+        <div class="flex flex-col gap-xs">
+          <label class="font-tiny text-tiny uppercase text-muted-text" for="username"
+            >Username</label
+          >
+          <input
+            class="input-bg border border-border p-sm font-body text-body text-on-surface focus:border-action-blue focus:outline-none transition-colors"
+            id="username"
+            name="username"
+            placeholder="user@example.com"
+            type="text"
+          />
+        </div>
+        <div class="flex flex-col gap-xs">
+          <label class="font-tiny text-tiny uppercase text-muted-text" for="password"
+            >Password</label
+          >
+          <input
+            class="input-bg border border-border p-sm font-body text-body text-on-surface focus:border-action-blue focus:outline-none transition-colors"
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            type="password"
+          />
+        </div>
+        <button
+          class="bg-action-blue text-on-primary font-h2 text-h2 p-sm mt-sm hover:opacity-90 active:scale-95 transition-all w-full flex justify-center items-center gap-sm"
+          type="button"
+        >
+          <span>LOGIN</span>
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
+            >login</span
+          >
+        </button>
+      </form>
+      <!-- Footer -->
+      <footer class="text-center mt-md border-t border-border pt-md">
+        <p class="font-tiny text-tiny text-muted-text uppercase tracking-widest">
+          <span class="material-symbols-outlined text-[14px] align-middle mr-xs">monitoring</span>
+          Session is actively monitored by StealthGuard OS
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

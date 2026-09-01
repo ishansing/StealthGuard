@@ -109,6 +109,7 @@ spacing:
 The design system projects a high-integrity, technical atmosphere designed for analysts and security professionals. It prioritizes clarity, performance, and serious intent, evoking a "command center" emotional response.
 
 The design style is a hybrid of **Minimalism** and **Brutalism**, characterized by:
+
 - **Utilitarian Precision:** A boxy layout with rigid borders and strict alignment that reflects the mathematical nature of bot detection.
 - **High-Contrast Depth:** Deep charcoal and true black backgrounds provide a low-strain environment for long-duration monitoring.
 - **Information Density:** Large, impactful typography for key metrics contrasted against small, technical labels for metadata.
@@ -122,16 +123,16 @@ The palette is optimized for a **dark-primary** experience. It moves away from s
 - **Secondary (Sage Green):** A muted, organic green used as a success indicator and for secondary branding elements to soften the technical edge.
 - **Backgrounds:** The interface uses a tiered black system: `#0D0D0D` for the base page and `#1A1A1A` for cards and surface containers.
 - **Semantics:**
-    - **Action/Human:** Blue (`#6C87AF`)
-    - **Safe/Positive:** Sage (`#A7A99A`)
-    - **Bot/Danger:** Red (`#EF4444`)
-    - **Caution:** Amber (`#FBBF24`)
+  - **Action/Human:** Blue (`#6C87AF`)
+  - **Safe/Positive:** Sage (`#A7A99A`)
+  - **Bot/Danger:** Red (`#EF4444`)
+  - **Caution:** Amber (`#FBBF24`)
 
 ## Typography
 
 This design system uses a **System Font Stack** (`system-ui, -apple-system, sans-serif`) to ensure zero latency, maximum performance, and a native OS feel.
 
-- **Scale:** The hierarchy is driven by contrast in weight and case. 
+- **Scale:** The hierarchy is driven by contrast in weight and case.
 - **Labels:** Small labels and axis text use `uppercase` and increased `letter-spacing` to maintain legibility at small sizes.
 - **Metrics:** For dashboard views, a `metric-lg` style is introduced for primary session scores and totals, creating a clear focal point.
 - **Responsive:** Headlines are kept under `1.5rem` to ensure consistent presentation across single-column mobile and desktop views without needing fluid scaling.
@@ -165,26 +166,31 @@ The shape language is **Soft-Geometric**. While the overall layout is "boxy" and
 ## Components
 
 ### Buttons
+
 - **Primary:** Solid `action-blue`, white text, no border.
 - **Secondary/Human:** Solid `success-sage`, black/dark text.
 - **Destructive/Bot:** Solid `danger-red`, white text.
 - **Interaction:** On hover, reduce opacity to 0.9. On click, subtle scale down (0.98).
 
 ### Inputs
-- **Style:** Background `#0D0D0D`, border `1px solid var(--border)`. 
+
+- **Style:** Background `#0D0D0D`, border `1px solid var(--border)`.
 - **Focus:** Border changes to `action-blue`. No glow or outer shadow.
 - **Labels:** Placed strictly above the input in `tiny` uppercase typography.
 
 ### Cards & Panels
+
 - **Container:** Background `#1A1A1A`, border `1px solid #2D2D2D`.
 - **Header:** Often features a colored top-border or a subtle background tint to categorize the content (e.g., a blue header for "Active Sessions").
 
 ### Lists & Tables (Admin)
+
 - **Table:** `border-collapse: collapse`. Rows separated by `1px` borders.
 - **Hover:** Rows highlight with a `0.2` opacity tint of `action-blue`.
 - **Selection:** Selected rows use a solid `1px` border of `action-blue`.
 
 ### Visualization (Sandbox/Admin)
+
 - **Rhythm Bar:** A horizontal gradient from `danger-red` to `success-sage`.
 - **Marker:** A simple white or `action-blue` vertical line that slides with a smooth `0.4s ease` transition.
 - **Charts:** Hand-rolled bars using `div` elements with fixed widths and `gap: 2px` to maintain the technical, pixel-perfect look.
