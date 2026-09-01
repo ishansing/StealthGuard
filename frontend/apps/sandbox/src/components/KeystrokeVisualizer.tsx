@@ -17,26 +17,6 @@ function holdToColor(holdMs: number): string {
 
 export function KeystrokeVisualizer({ keystrokes }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const barsRef = useRef<Array<{ holdMs: number; color: string }>>([])
-  const prevLenRef = useRef(0)
-
-  useEffect(() => {
-    if (keystrokes.length === 0) {
-      barsRef.current = []
-      prevLenRef.current = 0
-      return
-    }
-    if (keystrokes.length < prevLenRef.current) {
-      barsRef.current = keystrokes.map((k) => ({ holdMs: k.holdMs, color: holdToColor(k.holdMs) }))
-    } else {
-      const slice = keystrokes.slice(prevLenRef.current)
-      for (const k of slice) {
-        barsRef.current.push({ holdMs: k.holdMs, color: holdToColor(k.holdMs) })
-      }
-    }
-    if (barsRef.current.length > MAX_BARS) barsRef.current = barsRef.current.slice(-MAX_BARS)
-    prevLenRef.current = keystrokes.length
-  }, [keystrokes])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -51,14 +31,18 @@ export function KeystrokeVisualizer({ keystrokes }: Props) {
 
     ctx.clearRect(0, 0, w, CANVAS_H)
 
-    const bars = barsRef.current
-    if (bars.length === 0) {
+    if (keystrokes.length === 0) {
       ctx.fillStyle = '#555'
       ctx.font = '12px system-ui'
       ctx.textAlign = 'center'
       ctx.fillText('Start typing…', w / 2, CANVAS_H / 2 + 4)
       return
     }
+
+    const bars = keystrokes.slice(-MAX_BARS).map((k) => ({
+      holdMs: k.holdMs,
+      color: holdToColor(k.holdMs),
+    }))
 
     const totalW = bars.length * (BAR_WIDTH + GAP)
     const offsetX = Math.max(0, (w - totalW) / 2)
