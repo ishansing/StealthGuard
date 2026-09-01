@@ -55,6 +55,8 @@ export class StealthGuardClient {
   private readonly instrumentedForms = new WeakSet<HTMLFormElement>()
   private observer: MutationObserver | null = null
   private instrumented = false
+  private readonly _onKeystroke?: (event: { key: string; holdMs: number }) => void
+  private readonly _onMouseMove?: (event: { x: number; y: number; t: number }) => void
 
   constructor(options: StealthGuardOptions) {
     this.gatewayUrl = options.gatewayUrl.replace(/\/$/, '')
@@ -65,6 +67,8 @@ export class StealthGuardClient {
     this.autoInstrument = options.autoInstrument ?? false
     this.selector = options.selector ?? 'form'
     this._sessionId = options.sessionId ?? null
+    this._onKeystroke = options.onKeystroke
+    this._onMouseMove = options.onMouseMove
   }
 
   get sessionId(): string | null {
@@ -286,7 +290,9 @@ export class StealthGuardClient {
     const down = this.keysDown.get(e.key)
     if (down === undefined) return
     this.keysDown.delete(e.key)
-    this.push(this.keystrokes, { key: e.key, down_time: down, up_time: this.now() })
+    const up = this.now()
+    this.push(this.keystrokes, { key: e.key, down_time: down, up_time: up })
+    this._onKeystroke?.({ key: e.key, holdMs: Math.round((up - down) * 1000) })
   }
 
   private readonly onPaste = (): void => {
@@ -306,7 +312,9 @@ export class StealthGuardClient {
 
   private readonly onMouseMove = (e: MouseEvent): void => {
     this.sawMouse = true
-    this.push(this.mouseMoves, { x: e.clientX, y: e.clientY, t: this.now() })
+    const t = this.now()
+    this.push(this.mouseMoves, { x: e.clientX, y: e.clientY, t })
+    this._onMouseMove?.({ x: e.clientX, y: e.clientY, t })
   }
 
   private readonly onTouchMove = (e: TouchEvent): void => {

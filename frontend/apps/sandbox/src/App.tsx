@@ -1,5 +1,10 @@
-import { useState, type FormEvent } from 'react'
+import { useCallback, useRef, useState, type FormEvent } from 'react'
 import { useStealthGuard } from '@stealthguard/sdk'
+import { KeystrokeVisualizer } from './components/KeystrokeVisualizer'
+import { MousePathCanvas } from './components/MousePathCanvas'
+import { ScoreBreakdown } from './components/ScoreBreakdown'
+import { DecisionBadge } from './components/DecisionBadge'
+import { PersonaShowdown } from './components/PersonaShowdown'
 import './App.css'
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL ?? 'http://localhost:8080'
@@ -10,9 +15,6 @@ interface Telemetry {
   clicks?: Array<{ x: number; y: number; t: number }>
 }
 
-/** Illustrative persona telemetry for the "compare personas" section —
- *  representative shapes of the bot-simulator personas, so a visitor can see
- *  how the system would treat each without integrating anything. */
 const PERSONAS: Record<string, Telemetry> = {
   'naive bot': {
     keystrokes: Array.from({ length: 8 }, (_, i) => ({
@@ -68,19 +70,37 @@ interface PersonaResult {
 }
 
 export default function App() {
+  const keystrokeBuffer = useRef<Array<{ key: string; holdMs: number }>>([])
+  const mouseBuffer = useRef<Array<{ x: number; y: number; t: number }>>([])
+  const [, setTick] = useState(0)
+
+  const onKeystroke = useCallback((e: { key: string; holdMs: number }) => {
+    keystrokeBuffer.current = [...keystrokeBuffer.current.slice(-29), e]
+    setTick((t) => t + 1)
+  }, [])
+
+  const onMouseMove = useCallback((e: { x: number; y: number; t: number }) => {
+    mouseBuffer.current = [...mouseBuffer.current.slice(-199), e]
+    setTick((t) => t + 1)
+  }, [])
+
   const { decision, ready, flush } = useStealthGuard({
     gatewayUrl: GATEWAY_URL,
     page: '/sandbox',
-    flushIntervalMs: 2000,
+    flushIntervalMs: 60000,
+    onKeystroke,
+    onMouseMove,
   })
+
   const [personaResults, setPersonaResults] = useState<Record<string, PersonaResult>>({})
+  const runAllInProgress = useRef(false)
 
   const onSubmit = (e: FormEvent): void => {
     e.preventDefault()
     void flush()
   }
 
-  const runPersona = async (name: string): Promise<void> => {
+  const runPersona = useCallback(async (name: string): Promise<void> => {
     const payload = PERSONAS[name]
     const res = await fetch(`${GATEWAY_URL}/stealthguard/telemetry`, {
       method: 'POST',
@@ -99,69 +119,84 @@ export default function App() {
       ...prev,
       [name]: { decision: body.decision, score: body.humanness_score },
     }))
-  }
+  }, [])
+
+  const runAll = useCallback(async () => {
+    if (runAllInProgress.current) return
+    runAllInProgress.current = true
+    for (const name of Object.keys(PERSONAS)) {
+      await runPersona(name)
+      await new Promise((r) => setTimeout(r, 150))
+    }
+    runAllInProgress.current = false
+  }, [runPersona])
 
   const score = decision?.humanness_score ?? 0.5
   const rhythmLeft = `${Math.round(score * 100)}%`
 
   return (
     <main>
-      <h1>StealthGuard Sandbox</h1>
-      <p className="tagline">Type and move — see it scored live. No integration needed.</p>
+      <header className="sandbox-header">
+        <h1>StealthGuard Sandbox</h1>
+        <p className="tagline">
+          Type and move — see the detection working in real-time. No integration needed.
+        </p>
+      </header>
 
-      <form onSubmit={onSubmit}>
-        <label htmlFor="live-text">Anything</label>
-        <input id="live-text" name="text" autoComplete="off" />
-        <button type="submit" disabled={!ready} data-testid="score-it">
-          Score it
-        </button>
-      </form>
+      <div className="sandbox-layout">
+        <div className="live-input">
+          <form onSubmit={onSubmit} className="sandbox-form">
+            <label htmlFor="live-text">Type anything</label>
+            <input id="live-text" name="text" autoComplete="off" placeholder="Start typing…" />
+            <button type="submit" disabled={!ready} data-testid="score-it">
+              Score it
+            </button>
+          </form>
 
-      <div className="rhythm" data-testid="rhythm-line" aria-label="Humanness score">
-        <span className="rhythm-marker" style={{ left: rhythmLeft }} />
-        <span className="rhythm-label left">bot</span>
-        <span className="rhythm-label right">human</span>
+          <div className="rhythm" data-testid="rhythm-line" aria-label="Humanness score">
+            <span className="rhythm-marker" style={{ left: rhythmLeft }} />
+            <span className="rhythm-tick" style={{ left: '25%' }} />
+            <span className="rhythm-tick" style={{ left: '50%' }} />
+            <span className="rhythm-tick" style={{ left: '75%' }} />
+            <span className="rhythm-label left">bot</span>
+            <span className="rhythm-label center">unsure</span>
+            <span className="rhythm-label right">human</span>
+          </div>
+
+          <div className="decision-panel">
+            {decision ? (
+              <>
+                <DecisionBadge decision={decision.decision} score={decision.humanness_score} />
+                <span className="decision-status" data-testid="decision">
+                  {decision.decision === 'challenge' ? ' — verification needed' : ''}
+                </span>
+              </>
+            ) : (
+              <p className="decision-idle" data-testid="decision">
+                {ready ? 'Type and press Score it…' : 'Connecting…'}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="live-viz">
+          <KeystrokeVisualizer keystrokes={keystrokeBuffer.current} />
+          <MousePathCanvas points={mouseBuffer.current} />
+        </div>
       </div>
 
-      <p className="decision" data-testid="decision">
-        {decision
-          ? `Decision: ${decision.decision} (${decision.humanness_score?.toFixed(3) ?? '—'})`
-          : ready
-            ? 'Type and press Score it…'
-            : 'Connecting…'}
-      </p>
-      {decision && decision.reason_codes.length > 0 && (
-        <ul className="reasons">
-          {decision.reason_codes.map((rc) => (
-            <li key={rc.code}>
-              {rc.code} <span>({rc.weight.toFixed(3)})</span>
-            </li>
-          ))}
-        </ul>
-      )}
+      {decision && <ScoreBreakdown decision={decision} />}
 
-      <section aria-label="Compare personas">
-        <h2>Compare personas</h2>
-        <p>How would the system treat different inputs? Try the bot-simulator shapes.</p>
-        <div className="personas">
-          {Object.keys(PERSONAS).map((name) => (
-            <button
-              key={name}
-              onClick={() => void runPersona(name)}
-              data-testid={`persona-${name}`}
-            >
-              {name}
-            </button>
-          ))}
-        </div>
-        <div className="persona-results">
-          {Object.entries(personaResults).map(([name, r]) => (
-            <p key={name} data-testid={`result-${name}`}>
-              <b>{name}</b>: {r.decision} ({r.score === null ? '—' : r.score.toFixed(3)})
-            </p>
-          ))}
-        </div>
-      </section>
+      <PersonaShowdown
+        personas={PERSONAS}
+        results={personaResults}
+        onRun={(name) => void runPersona(name)}
+        onRunAll={runAll}
+      />
+
+      <footer className="sandbox-footer">
+        <p>Session is monitored by StealthGuard.</p>
+      </footer>
     </main>
   )
 }

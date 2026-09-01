@@ -37,4 +37,8 @@ export interface StealthGuardOptions {
   autoInstrument?: boolean
   /** CSS selector for autoInstrument (default "form"). */
   selector?: string
+  /** Called on each captured keystroke (for live visualization). */
+  onKeystroke?: (event: { key: string; holdMs: number }) => void
+  /** Called on each captured mouse move (for live visualization). */
+  onMouseMove?: (event: { x: number; y: number; t: number }) => void
 }

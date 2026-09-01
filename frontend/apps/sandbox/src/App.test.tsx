@@ -34,7 +34,7 @@ describe('Sandbox', () => {
     stubFetch()
     render(<App />)
 
-    expect(screen.getByLabelText('Anything')).toBeTruthy()
+    expect(screen.getByLabelText('Type anything')).toBeTruthy()
     expect(screen.getByTestId('rhythm-line')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Score it' })).toBeTruthy()
   })
@@ -44,8 +44,8 @@ describe('Sandbox', () => {
     render(<App />)
 
     fireEvent.click(screen.getByTestId('persona-naive bot'))
-    await screen.findByTestId('result-naive bot')
-    expect(screen.getByTestId('result-naive bot').textContent).toContain('allow')
+    const result = await screen.findByTestId('result-naive bot')
+    expect(result.textContent).toContain('allow')
 
     const telemetryCall = fetchMock.mock.calls.find((c) => String(c[0]).includes('/telemetry'))
     expect(telemetryCall).toBeDefined()
