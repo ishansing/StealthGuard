@@ -212,7 +212,7 @@ export default function App() {
               placeholder="••••••••"
             />
           </div>
-          <button type="submit" className="login-btn" disabled={busy || !ready}>
+          <button type="submit" className="login-btn" disabled={busy || !ready} aria-label="Sign in">
             <span>{busy ? 'Checking…' : 'LOGIN'}</span>
             <span
               className="material-symbols-outlined"
