@@ -1,54 +1,73 @@
 import type { Stats } from '../api'
 
-const BUCKETS = 10
-
 export function StatsCharts({ stats }: { stats: Stats | null }) {
-  if (!stats) return <p>Waiting for data…</p>
+  if (!stats) {
+    return (
+      <div className="stats-grid">
+        <div className="stat-card">
+          <span className="label">TOTAL SESSIONS</span>
+          <span className="value">—</span>
+        </div>
+        <div className="stat-card">
+          <span className="label">BOT TRAFFIC</span>
+          <span className="value">—</span>
+        </div>
+        <div className="stat-card">
+          <span className="label">HUMAN TRAFFIC</span>
+          <span className="value">—</span>
+        </div>
+        <div className="stat-card">
+          <span className="label">AVG CONFIDENCE</span>
+          <span className="value">—</span>
+        </div>
+      </div>
+    )
+  }
 
-  const histCounts = Array.from(
-    { length: BUCKETS },
-    (_, b) => stats.score_histogram[String(b)] ?? 0,
-  )
-  const maxHist = Math.max(1, ...histCounts)
-
-  const funnel = ['allow', 'block', 'challenge'] as const
-  const maxFunnel = Math.max(1, ...funnel.map((d) => stats.decisions[d] ?? 0))
+  const totalSessions = Object.values(stats.decisions).reduce((a, b) => a + b, 0)
+  const botTraffic = stats.decisions.block ?? 0
+  const humanTraffic = stats.decisions.allow ?? 0
+  const challengeTraffic = stats.decisions.challenge ?? 0
 
   return (
-    <section className="stats" aria-label="Statistics">
-      <div className="stat-block">
-        <h2>Score distribution</h2>
-        <div className="histogram" data-testid="histogram" role="img" aria-label="Score histogram">
-          {histCounts.map((count, b) => (
-            <div
-              key={b}
-              className="hist-bar"
-              style={{ height: `${(count / maxHist) * 100}%` }}
-              title={`${b / 10}–${(b + 1) / 10}: ${count}`}
-              data-testid={`hist-${b}`}
-            />
-          ))}
-        </div>
-        <p className="axis">0 … … … 1 (score)</p>
-      </div>
-
-      <div className="stat-block">
-        <h2>Decision funnel</h2>
-        <div className="funnel" data-testid="funnel">
-          {funnel.map((d) => (
-            <div key={d} className="funnel-row">
-              <span className="funnel-label">{d}</span>
-              <div
-                className="funnel-bar"
-                style={{ width: `${((stats.decisions[d] ?? 0) / maxFunnel) * 100}%` }}
-                data-testid={`funnel-${d}`}
-              >
-                {stats.decisions[d] ?? 0}
-              </div>
-            </div>
-          ))}
+    <div className="stats-grid">
+      <div className="stat-card">
+        <span className="label">TOTAL SESSIONS</span>
+        <span className="value">{totalSessions.toLocaleString()}</span>
+        <div className="meta up">
+          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+            arrow_upward
+          </span>
+          ACTIVE
         </div>
       </div>
-    </section>
+      <div className="stat-card">
+        <span className="label">BOT TRAFFIC</span>
+        <span className="value danger">{botTraffic.toLocaleString()}</span>
+        <div className="meta warn">
+          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+            warning
+          </span>
+          {botTraffic > 0 ? 'ELEVATED RATE' : 'STABLE'}
+        </div>
+      </div>
+      <div className="stat-card">
+        <span className="label">HUMAN TRAFFIC</span>
+        <span className="value success">{humanTraffic.toLocaleString()}</span>
+        <div className="meta">
+          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+            check_circle
+          </span>
+          STABLE
+        </div>
+      </div>
+      <div className="stat-card">
+        <span className="label">AVG CONFIDENCE</span>
+        <span className="value primary">
+          {totalSessions > 0 ? ((humanTraffic / totalSessions) * 100).toFixed(0) + '%' : '—'}
+        </span>
+        <div className="meta">CHALLENGES: {challengeTraffic}</div>
+      </div>
+    </div>
   )
 }

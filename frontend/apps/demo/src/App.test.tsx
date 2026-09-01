@@ -18,6 +18,6 @@ describe('App', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('StealthGuard Demo')
     expect(screen.getByLabelText('Username')).toBeTruthy()
     expect(screen.getByLabelText('Password')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /LOGIN/i })).toBeTruthy()
   })
 })

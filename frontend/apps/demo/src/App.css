@@ -1,86 +1,265 @@
-:root {
-  color-scheme: light dark;
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
-}
-
 main {
-  max-width: 30rem;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
-h1 {
-  margin-bottom: 0.25rem;
+.demo-container {
+  width: 100%;
+  max-width: 30rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ── Header ── */
+
+.demo-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.demo-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--primary-light);
 }
 
 .tagline {
-  color: #888;
-  margin-top: 0;
+  font-size: 1rem;
+  color: var(--muted);
 }
 
-.status {
-  border-left: 4px solid #666;
-  padding: 0.5rem 1rem;
-  margin: 1rem 0;
+/* ── Status Panel ── */
+
+.status-panel {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.status strong {
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.status-header .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.status-header .status {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--success);
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.status-cell.right {
+  text-align: right;
+}
+
+.status-cell .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.status-cell .value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.status-cell .value.neutral {
+  color: var(--fg);
+}
+
+.reasons-section {
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+}
+
+.reasons-section .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.reason-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.reason-tag {
+  font-size: 0.75rem;
+  background: var(--surface-container-high);
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  color: var(--fg-variant);
+  letter-spacing: 0.05em;
+}
+
+/* ── Login Form ── */
+
+.login-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+
+.login-panel h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.form-group label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.form-group input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  font-size: 1rem;
+  color: var(--fg);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  border-color: var(--primary);
+}
+
+.form-group input::placeholder {
+  color: var(--muted);
+}
+
+.login-btn {
+  background: var(--primary);
+  color: var(--fg);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  transition: opacity 0.2s;
   text-transform: uppercase;
 }
 
-.reasons {
-  padding-left: 1.25rem;
-  color: #666;
-  font-size: 0.9rem;
+.login-btn:hover {
+  opacity: 0.9;
 }
 
-.weight {
-  color: #999;
+.login-btn:active {
+  transform: scale(0.98);
 }
 
-.login,
-.challenge form {
-  display: grid;
-  gap: 0.5rem;
-  margin: 1rem 0;
-}
-
-input {
-  padding: 0.5rem;
-  font-size: 1rem;
-  border: 1px solid #999;
-  border-radius: 6px;
-}
-
-button {
-  padding: 0.6rem 1rem;
-  font-size: 1rem;
-  border: none;
-  border-radius: 6px;
-  background: #2563eb;
-  color: #fff;
-  cursor: pointer;
-}
-
-button:disabled {
+.login-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
+/* ── Challenge ── */
+
 .challenge {
-  border: 1px dashed #b45309;
-  border-radius: 8px;
+  border: 1px dashed var(--border);
   padding: 1rem;
-  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .challenge h2 {
-  margin-top: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
 }
 
-footer {
-  margin-top: 3rem;
-  color: #888;
-  font-size: 0.85rem;
+.challenge form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* ── Footer ── */
+
+.demo-footer {
+  text-align: center;
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.demo-footer p {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+/* ── Reduced motion ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .login-btn:active {
+    transform: none;
+  }
 }

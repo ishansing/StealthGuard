@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useStealthGuard } from '@stealthguard/sdk'
 import { KeystrokeVisualizer } from './components/KeystrokeVisualizer'
 import { MousePathCanvas } from './components/MousePathCanvas'
@@ -96,11 +96,6 @@ export default function App() {
   const [activePersona, setActivePersona] = useState<string | null>(null)
   const runAllInProgress = useRef(false)
 
-  const onSubmit = (e: FormEvent): void => {
-    e.preventDefault()
-    void flush()
-  }
-
   const runPersona = useCallback(async (name: string): Promise<void> => {
     setActivePersona(name)
     const payload = PERSONAS[name]
@@ -148,54 +143,121 @@ export default function App() {
 
   const showLive = activePersona === null
   const score = decision?.humanness_score ?? 0.5
-  const rhythmLeft = `${Math.round(score * 100)}%`
+  const scorePct = Math.round(score * 100)
+  const rhythmLeft = `${scorePct}%`
+  const scoreColor =
+    scorePct < 40 ? 'var(--danger)' : scorePct < 70 ? 'var(--warning)' : 'var(--success)'
 
   return (
-    <main>
-      <header className="sandbox-header">
-        <h1>StealthGuard Sandbox</h1>
-        <p className="tagline">
-          Type and move — see the detection working in real-time. No integration needed.
-        </p>
+    <div className="app-layout">
+      {/* Top Nav */}
+      <header className="top-nav">
+        <span className="top-nav-brand">STEALTHGUARD_OS</span>
+        <nav className="top-nav-links">
+          <a className="top-nav-link" href="http://localhost:5173">
+            DEMO
+          </a>
+          <a className="top-nav-link" href="http://localhost:5174">
+            ADMIN
+          </a>
+          <span className="top-nav-link active">SANDBOX</span>
+        </nav>
+        <div className="top-nav-actions">
+          <button type="button" disabled>
+            <span className="material-symbols-outlined">terminal</span>
+          </button>
+          <button type="button" disabled>
+            <span className="material-symbols-outlined">settings</span>
+          </button>
+          <button type="button" disabled>
+            <span className="material-symbols-outlined">account_circle</span>
+          </button>
+        </div>
       </header>
 
-      <div className="sandbox-layout">
-        <div className="live-input">
-          <form onSubmit={onSubmit} className="sandbox-form">
-            <label htmlFor="live-text">Type anything</label>
-            <input id="live-text" name="text" autoComplete="off" placeholder="Start typing…" />
-            <button type="submit" disabled={!ready} data-testid="score-it">
+      {/* Main Content */}
+      <main className="main-content">
+        {/* Header */}
+        <section className="sandbox-header">
+          <h1>StealthGuard Sandbox</h1>
+          <p className="tagline">Type and move — see it scored live…</p>
+        </section>
+
+        {/* Input Section */}
+        <section className="input-section">
+          <div className="input-group">
+            <label htmlFor="sandbox-input">Telemetry Input Canvas</label>
+            <textarea
+              id="sandbox-input"
+              className="sandbox-textarea"
+              placeholder="Begin typing to generate telemetry data..."
+              rows={4}
+              autoComplete="off"
+            />
+          </div>
+          <div className="input-actions">
+            <button
+              type="button"
+              className="score-btn"
+              disabled={!ready}
+              onClick={() => void flush()}
+              data-testid="score-it"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>
+                analytics
+              </span>
               Score it
             </button>
-          </form>
+          </div>
+        </section>
 
-          <div className="rhythm" data-testid="rhythm-line" aria-label="Humanness score">
+        {/* Rhythm Bar */}
+        <section className="rhythm-section">
+          <div className="rhythm-header">
+            <h2>Live Confidence Score</h2>
+            <span className="rhythm-score" style={{ color: scoreColor }}>
+              {scorePct}%
+            </span>
+          </div>
+          <div
+            className="rhythm-bar-container"
+            data-testid="rhythm-line"
+            aria-label="Humanness score"
+          >
+            <div className="rhythm-bar-track" />
             <span className="rhythm-marker" style={{ left: rhythmLeft }} />
-            <span className="rhythm-tick" style={{ left: '25%' }} />
-            <span className="rhythm-tick" style={{ left: '50%' }} />
-            <span className="rhythm-tick" style={{ left: '75%' }} />
-            <span className="rhythm-label left">bot</span>
-            <span className="rhythm-label center">unsure</span>
-            <span className="rhythm-label right">human</span>
+            <div className="rhythm-ticks">
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
+          <div className="rhythm-labels">
+            <span>High Risk (Bot)</span>
+            <span>Verified (Human)</span>
+          </div>
+        </section>
 
-          <div className="decision-panel">
-            {decision ? (
-              <>
-                <DecisionBadge decision={decision.decision} score={decision.humanness_score} />
-                <span className="decision-status" data-testid="decision">
-                  {decision.decision === 'challenge' ? ' — verification needed' : ''}
-                </span>
-              </>
-            ) : (
-              <p className="decision-idle" data-testid="decision">
-                {ready ? 'Type and press Score it…' : 'Connecting…'}
-              </p>
-            )}
-          </div>
+        {/* Decision Panel */}
+        <div className="decision-panel">
+          {decision ? (
+            <>
+              <DecisionBadge decision={decision.decision} score={decision.humanness_score} />
+              <span className="decision-status" data-testid="decision">
+                {decision.decision === 'challenge' ? ' — verification needed' : ''}
+              </span>
+            </>
+          ) : (
+            <p className="decision-idle" data-testid="decision">
+              {ready ? 'Type and press Score it…' : 'Connecting…'}
+            </p>
+          )}
         </div>
 
-        <div className="live-viz">
+        {/* Visualization */}
+        <section className="viz-section">
           {activePersona && (
             <div className="viz-header">
               <span className="viz-active-persona">Viewing: {activePersona}</span>
@@ -212,21 +274,54 @@ export default function App() {
             keystrokes={showLive ? keystrokeBuffer.current : (personaVizKeystrokes ?? [])}
           />
           <MousePathCanvas points={showLive ? mouseBuffer.current : (personaVizPoints ?? [])} />
-        </div>
-      </div>
+        </section>
 
-      {decision && <ScoreBreakdown decision={decision} />}
+        {/* Score Breakdown */}
+        {decision && <ScoreBreakdown decision={decision} />}
 
-      <PersonaShowdown
-        personas={PERSONAS}
-        results={personaResults}
-        onRun={(name) => void runPersona(name)}
-        onRunAll={runAll}
-      />
+        {/* Persona Showdown */}
+        <PersonaShowdown
+          personas={PERSONAS}
+          results={personaResults}
+          onRun={(name) => void runPersona(name)}
+          onRunAll={runAll}
+        />
 
+        {/* Results List */}
+        {Object.keys(personaResults).length > 0 && (
+          <div style={{ padding: '0 2rem 2rem' }}>
+            <div className="results-list">
+              {Object.entries(personaResults).map(([name, r]) => (
+                <div key={name} className="result-item" data-testid={`list-result-${name}`}>
+                  <div className="result-info">
+                    <span className="result-name">{name}</span>
+                    <span className="result-meta">Score: {r.score?.toFixed(3) ?? '—'}</span>
+                  </div>
+                  <span
+                    className={`result-status ${r.decision === 'allow' ? 'pass' : r.decision === 'challenge' ? 'review' : 'fail'}`}
+                  >
+                    {r.decision === 'allow'
+                      ? 'Pass'
+                      : r.decision === 'challenge'
+                        ? 'Review'
+                        : 'Fail'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Footer */}
       <footer className="sandbox-footer">
-        <p>Session is monitored by StealthGuard.</p>
+        <span className="copyright">© 2024 STEALTHGUARD CYBERNETICS // ALL RIGHTS RESERVED</span>
+        <div className="links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Security Disclosure</a>
+        </div>
       </footer>
-    </main>
+    </div>
   )
 }

@@ -11,18 +11,20 @@ const STATS: Stats = {
 }
 
 describe('StatsCharts', () => {
-  it('renders a histogram bar per score bucket', () => {
+  it('renders stat cards with correct totals', () => {
     render(<StatsCharts stats={STATS} />)
-    expect(screen.getByTestId('histogram')).toBeTruthy()
-    expect(screen.getByTestId('hist-8').getAttribute('title')).toContain('5')
-    expect(screen.getByTestId('hist-0').getAttribute('title')).toContain('4')
-    expect(screen.getByTestId('hist-3').getAttribute('title')).toContain('0')
+    expect(screen.getByText('TOTAL SESSIONS')).toBeTruthy()
+    expect(screen.getByText('16')).toBeTruthy()
+    expect(screen.getByText('BOT TRAFFIC')).toBeTruthy()
+    expect(screen.getByText('5')).toBeTruthy()
+    expect(screen.getByText('HUMAN TRAFFIC')).toBeTruthy()
+    expect(screen.getByText('8')).toBeTruthy()
   })
 
-  it('renders the decision funnel counts', () => {
-    render(<StatsCharts stats={STATS} />)
-    expect(screen.getByTestId('funnel-allow').textContent).toBe('8')
-    expect(screen.getByTestId('funnel-block').textContent).toBe('5')
-    expect(screen.getByTestId('funnel-challenge').textContent).toBe('3')
+  it('shows placeholder when stats are null', () => {
+    render(<StatsCharts stats={null} />)
+    expect(screen.getByText('TOTAL SESSIONS')).toBeTruthy()
+    const values = screen.getAllByText('—')
+    expect(values.length).toBeGreaterThanOrEqual(4)
   })
 })

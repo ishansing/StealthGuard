@@ -28,7 +28,7 @@ function MousePathCanvas({ events }: { events: TelemetryEvent[] }) {
       (canvas.height - pad * 2) / Math.max(1, maxY - minY),
     )
 
-    ctx.strokeStyle = '#2563eb'
+    ctx.strokeStyle = 'var(--primary-light)'
     ctx.lineWidth = 2
     ctx.beginPath()
     moves.forEach((m, i) => {
@@ -64,7 +64,9 @@ function KeystrokeChart({ events }: { events: TelemetryEvent[] }) {
       role="img"
       aria-label="Keystroke hold times"
     >
-      {keys.length === 0 && <p>No keystrokes recorded.</p>}
+      {keys.length === 0 && (
+        <p style={{ color: 'var(--muted)', padding: '0.5rem' }}>No keystrokes recorded.</p>
+      )}
       {keys.map((hold, i) => (
         <div
           key={i}
@@ -88,37 +90,49 @@ export function SessionDetail({
 }) {
   if (!detail) return <p className="hint">Select a session to inspect it.</p>
 
+  const decisionColor =
+    detail.decision === 'allow'
+      ? 'var(--success)'
+      : detail.decision === 'block'
+        ? 'var(--danger)'
+        : 'var(--warning)'
+
   return (
-    <section aria-label="Session detail">
-      <h2>Session {detail.session_id.slice(0, 8)}</h2>
-      <p className="meta">
-        Decision: <strong>{detail.decision ?? '—'}</strong> · Score:{' '}
-        {detail.humanness_score?.toFixed(3) ?? '—'} · Model: {detail.model_version ?? '—'}
-      </p>
+    <section className="detail-section" aria-label="Session detail">
+      <div className="detail-header">
+        <h2>Session {detail.session_id.slice(0, 8)}</h2>
+        <span className="meta">Model: {detail.model_version ?? '—'}</span>
+      </div>
+      <div className="detail-body">
+        <p style={{ marginBottom: '0.5rem' }}>
+          Decision: <strong style={{ color: decisionColor }}>{detail.decision ?? '—'}</strong> ·
+          Score: {detail.humanness_score?.toFixed(3) ?? '—'}
+        </p>
 
-      {detail.reason_codes.length > 0 && (
-        <ul className="reasons">
-          {detail.reason_codes.map((rc) => (
-            <li key={rc.code}>
-              {rc.code} <span>({rc.weight.toFixed(3)})</span>
-            </li>
-          ))}
-        </ul>
-      )}
+        {detail.reason_codes.length > 0 && (
+          <ul className="reasons">
+            {detail.reason_codes.map((rc) => (
+              <li key={rc.code}>
+                {rc.code} <span>({rc.weight.toFixed(3)})</span>
+              </li>
+            ))}
+          </ul>
+        )}
 
-      <div className="detail-grid">
-        <figure>
-          <figcaption>Mouse path replay</figcaption>
-          <MousePathCanvas events={detail.events} />
-        </figure>
-        <figure>
-          <figcaption>Keystroke hold times</figcaption>
-          <KeystrokeChart events={detail.events} />
-        </figure>
+        <div className="detail-grid">
+          <figure>
+            <figcaption>Mouse path replay</figcaption>
+            <MousePathCanvas events={detail.events} />
+          </figure>
+          <figure>
+            <figcaption>Keystroke hold times</figcaption>
+            <KeystrokeChart events={detail.events} />
+          </figure>
+        </div>
       </div>
 
       <div className="reviewer">
-        <span>Reviewer feedback:</span>
+        <span style={{ color: 'var(--muted)' }}>Reviewer feedback:</span>
         <button type="button" onClick={() => onFeedback('human')} data-testid="mark-human">
           Mark as human
         </button>

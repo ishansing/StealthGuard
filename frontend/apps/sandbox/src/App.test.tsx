@@ -34,9 +34,9 @@ describe('Sandbox', () => {
     stubFetch()
     render(<App />)
 
-    expect(screen.getByLabelText('Type anything')).toBeTruthy()
+    expect(screen.getByLabelText('Telemetry Input Canvas')).toBeTruthy()
     expect(screen.getByTestId('rhythm-line')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Score it' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Score it/i })).toBeTruthy()
   })
 
   it('posts a persona telemetry and shows its decision', async () => {
@@ -44,8 +44,8 @@ describe('Sandbox', () => {
     render(<App />)
 
     fireEvent.click(screen.getByTestId('persona-naive bot'))
-    const result = await screen.findByTestId('result-naive bot')
-    expect(result.textContent).toContain('allow')
+    const result = await screen.findByTestId('list-result-naive bot')
+    expect(result.textContent).toContain('Pass')
 
     const telemetryCall = fetchMock.mock.calls.find((c) => String(c[0]).includes('/telemetry'))
     expect(telemetryCall).toBeDefined()

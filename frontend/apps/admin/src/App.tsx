@@ -13,7 +13,10 @@ import { SessionDetail as SessionDetailPanel } from './components/SessionDetail'
 import { SessionTable } from './components/SessionTable'
 import { StatsCharts } from './components/StatsCharts'
 
+type View = 'overview' | 'sessions'
+
 export default function App() {
+  const [view, setView] = useState<View>('overview')
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -52,11 +55,106 @@ export default function App() {
   }
 
   return (
-    <main>
-      <h1>StealthGuard Analyst Dashboard</h1>
-      <StatsCharts stats={stats} />
-      <SessionTable sessions={sessions} selectedId={selectedId} onSelect={setSelectedId} />
-      <SessionDetailPanel detail={detail} feedbackStatus={feedbackStatus} onFeedback={onFeedback} />
-    </main>
+    <div className="admin-layout">
+      {/* Sidebar */}
+      <nav className="sidebar">
+        <div className="sidebar-brand">
+          <h1>STEALTHGUARD_OS</h1>
+        </div>
+        <div className="sidebar-profile">
+          <div className="sidebar-avatar">
+            <span className="material-symbols-outlined">person</span>
+          </div>
+          <div className="sidebar-user">
+            <div className="name">OPERATOR_01</div>
+            <div className="role">Authenticated Session</div>
+          </div>
+        </div>
+        <div className="sidebar-nav">
+          <button
+            className={`sidebar-link ${view === 'overview' ? 'active' : ''}`}
+            onClick={() => setView('overview')}
+          >
+            <span className="material-symbols-outlined">dashboard</span>
+            <span>Overview</span>
+          </button>
+          <button className="sidebar-link" disabled>
+            <span className="material-symbols-outlined">monitoring</span>
+            <span>Telemetry</span>
+          </button>
+          <button
+            className={`sidebar-link ${view === 'sessions' ? 'active' : ''}`}
+            onClick={() => setView('sessions')}
+          >
+            <span className="material-symbols-outlined">group</span>
+            <span>Sessions</span>
+          </button>
+          <button className="sidebar-link" disabled>
+            <span className="material-symbols-outlined">tune</span>
+            <span>Settings</span>
+          </button>
+          <button className="sidebar-link" disabled>
+            <span className="material-symbols-outlined">list_alt</span>
+            <span>Logs</span>
+          </button>
+        </div>
+        <div className="sidebar-footer">
+          <button className="sidebar-action" disabled>
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+              play_arrow
+            </span>
+            INITIATE SCAN
+          </button>
+        </div>
+        <div className="sidebar-bottom">
+          <button className="sidebar-link" disabled>
+            <span className="material-symbols-outlined">help_outline</span>
+            <span>Help</span>
+          </button>
+          <button className="sidebar-link" disabled>
+            <span className="material-symbols-outlined">logout</span>
+            <span>Logout</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="admin-main">
+        <header className="top-nav">
+          <span className="top-nav-title">ADMIN</span>
+          <div className="top-nav-actions">
+            <span className="material-symbols-outlined">terminal</span>
+            <span className="material-symbols-outlined">settings</span>
+            <span className="material-symbols-outlined">account_circle</span>
+          </div>
+        </header>
+
+        <div className="dashboard-content">
+          {view === 'overview' && (
+            <>
+              <StatsCharts stats={stats} />
+              <SessionTable
+                sessions={sessions}
+                selectedId={selectedId}
+                onSelect={(id) => {
+                  setSelectedId(id)
+                  setView('sessions')
+                }}
+              />
+            </>
+          )}
+          {view === 'sessions' && (
+            <>
+              <SessionTable sessions={sessions} selectedId={selectedId} onSelect={setSelectedId} />
+              <SessionDetailPanel
+                detail={detail}
+                feedbackStatus={feedbackStatus}
+                onFeedback={onFeedback}
+              />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
