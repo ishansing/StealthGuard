@@ -35,12 +35,12 @@ export interface Stats {
 }
 
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${GATEWAY_URL}${path}`)
+  const res = await fetch(`${GATEWAY_URL}${path}`, { cache: 'no-store' })
   if (!res.ok) throw new Error(`${path}: ${res.status}`)
   return res.json() as Promise<T>
 }
 
-export function fetchSessions(page = 0, size = 20): Promise<{ content: SessionSummary[] }> {
+export function fetchSessions(page = 0, size = 200): Promise<{ content: SessionSummary[] }> {
   return get(`/stealthguard/admin/sessions?page=${page}&size=${size}`)
 }
 
@@ -59,6 +59,7 @@ export async function postFeedback(
 ): Promise<void> {
   const res = await fetch(`${GATEWAY_URL}/stealthguard/admin/feedback`, {
     method: 'POST',
+    cache: 'no-store',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ session_id: sessionId, reviewer, corrected_label: correctedLabel }),
   })
