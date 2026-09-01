@@ -18,12 +18,24 @@ function holdToColor(holdMs: number): string {
 export function KeystrokeVisualizer({ keystrokes }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const barsRef = useRef<Array<{ holdMs: number; color: string }>>([])
+  const prevLenRef = useRef(0)
 
   useEffect(() => {
-    if (keystrokes.length === 0) return
-    const latest = keystrokes[keystrokes.length - 1]
-    barsRef.current.push({ holdMs: latest.holdMs, color: holdToColor(latest.holdMs) })
-    if (barsRef.current.length > MAX_BARS) barsRef.current.shift()
+    if (keystrokes.length === 0) {
+      barsRef.current = []
+      prevLenRef.current = 0
+      return
+    }
+    if (keystrokes.length < prevLenRef.current) {
+      barsRef.current = keystrokes.map((k) => ({ holdMs: k.holdMs, color: holdToColor(k.holdMs) }))
+    } else {
+      const slice = keystrokes.slice(prevLenRef.current)
+      for (const k of slice) {
+        barsRef.current.push({ holdMs: k.holdMs, color: holdToColor(k.holdMs) })
+      }
+    }
+    if (barsRef.current.length > MAX_BARS) barsRef.current = barsRef.current.slice(-MAX_BARS)
+    prevLenRef.current = keystrokes.length
   }, [keystrokes])
 
   useEffect(() => {
