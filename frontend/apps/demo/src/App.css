@@ -1,5 +1,74 @@
-main {
+/* ── Layout ── */
+
+.app-layout {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top Nav ── */
+
+.top-nav {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1.5rem;
+  height: 4rem;
+  flex-shrink: 0;
+  z-index: 50;
+}
+
+.top-nav-brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--primary);
+}
+
+.top-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.top-nav-link {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  transition:
+    color 0.2s,
+    background 0.2s;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.top-nav-link:hover {
+  color: var(--fg);
+  background: var(--surface-container-highest);
+}
+
+.top-nav-link.active {
+  color: var(--primary);
+  border-bottom: 1px solid var(--primary);
+}
+
+.top-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary);
+}
+
+/* ── Main Content ── */
+
+.main-content {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12,6 +81,14 @@ main {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 600px) {
+  .top-nav-links {
+    display: none;
+  }
 }
 
 /* ── Header ── */

@@ -172,80 +172,102 @@ export default function App() {
     : 'var(--success)'
 
   return (
-    <main>
-      <div className="demo-container">
-        <header className="demo-header">
-          <h1>StealthGuard Demo</h1>
-          <p className="tagline">Passive bot detection — no CAPTCHA needed.</p>
-        </header>
+    <div className="app-layout">
+      {/* Top Nav */}
+      <header className="top-nav">
+        <span className="top-nav-brand">STEALTHGUARD_OS</span>
+        <nav className="top-nav-links">
+          <span className="top-nav-link active">DEMO</span>
+          <a className="top-nav-link" href="http://localhost:5174">
+            ADMIN
+          </a>
+          <a className="top-nav-link" href="http://localhost:5175">
+            SANDBOX
+          </a>
+        </nav>
+        <div className="top-nav-actions">
+          <span className="material-symbols-outlined">terminal</span>
+          <span className="material-symbols-outlined">settings</span>
+          <span className="material-symbols-outlined">account_circle</span>
+        </div>
+      </header>
 
-        <section className="status-panel" aria-live="polite" aria-atomic="true">
-          <div className="status-header">
-            <span className="label">Telemetry Status</span>
-            <span className="status" style={{ color: statusColor }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                {activeDecision ? 'check_circle' : 'hourglass_empty'}
+      {/* Main Content */}
+      <main className="main-content">
+        <div className="demo-container">
+          <header className="demo-header">
+            <h1>StealthGuard Demo</h1>
+            <p className="tagline">Passive bot detection — no CAPTCHA needed.</p>
+          </header>
+
+          <section className="status-panel" aria-live="polite" aria-atomic="true">
+            <div className="status-header">
+              <span className="label">Telemetry Status</span>
+              <span className="status" style={{ color: statusColor }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                  {activeDecision ? 'check_circle' : 'hourglass_empty'}
+                </span>
+                {statusLabel}
               </span>
-              {statusLabel}
-            </span>
-          </div>
-          <DecisionStatus decision={activeDecision} live={submitted === null} />
-        </section>
+            </div>
+            <DecisionStatus decision={activeDecision} live={submitted === null} />
+          </section>
 
-        {!ready && (
-          <p role="status" style={{ color: 'var(--muted)', textAlign: 'center' }}>
-            Connecting…
-          </p>
-        )}
+          {!ready && (
+            <p role="status" style={{ color: 'var(--muted)', textAlign: 'center' }}>
+              Connecting…
+            </p>
+          )}
 
-        <form className="login-panel" onSubmit={onSubmit}>
-          <h2>Authenticate</h2>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
-              placeholder="user@example.com"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              placeholder="••••••••"
-            />
-          </div>
-          <Button type="submit" disabled={!ready} loading={busy} aria-label="Sign in">
-            <span>{busy ? 'Checking…' : 'LOGIN'}</span>
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-              aria-hidden="true"
-            >
-              login
-            </span>
-          </Button>
-        </form>
+          <form className="login-panel" onSubmit={onSubmit}>
+            <h2>Authenticate</h2>
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+                placeholder="user@example.com"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder="••••••••"
+              />
+            </div>
+            <Button type="submit" disabled={!ready} loading={busy} aria-label="Sign in">
+              <span>{busy ? 'Checking…' : 'LOGIN'}</span>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+                aria-hidden="true"
+              >
+                login
+              </span>
+            </Button>
+          </form>
 
-        {decision?.decision === 'challenge' && (
-          <AccessibleChallenge respondChallenge={respondChallenge} />
-        )}
+          {decision?.decision === 'challenge' && (
+            <AccessibleChallenge respondChallenge={respondChallenge} />
+          )}
 
-        <footer className="demo-footer">
-          <p>
-            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
-              monitoring
-            </span>
-            Session is actively monitored by StealthGuard OS
-          </p>
-        </footer>
-      </div>
-    </main>
+          <footer className="demo-footer">
+            <p>
+              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+                monitoring
+              </span>
+              Session is actively monitored by StealthGuard OS
+            </p>
+          </footer>
+        </div>
+      </main>
+    </div>
   )
 }

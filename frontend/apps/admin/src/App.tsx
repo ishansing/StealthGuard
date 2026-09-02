@@ -113,7 +113,16 @@ export default function App() {
 
       <div className="admin-main">
         <header className="top-nav">
-          <span className="top-nav-title">ADMIN</span>
+          <span className="top-nav-brand">STEALTHGUARD_OS</span>
+          <nav className="top-nav-links">
+            <a className="top-nav-link" href="http://localhost:5173">
+              DEMO
+            </a>
+            <span className="top-nav-link active">ADMIN</span>
+            <a className="top-nav-link" href="http://localhost:5175">
+              SANDBOX
+            </a>
+          </nav>
           <div className="top-nav-actions">
             <span className="material-symbols-outlined">terminal</span>
             <span className="material-symbols-outlined">settings</span>
