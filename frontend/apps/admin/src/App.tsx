@@ -58,59 +58,6 @@ export default function App() {
 
   return (
     <div className="admin-layout">
-      <nav className="sidebar" aria-label="Main navigation">
-        <div className="sidebar-brand">
-          <h1>STEALTHGUARD_OS</h1>
-        </div>
-        <div className="sidebar-profile">
-          <div className="sidebar-avatar">
-            <span className="material-symbols-outlined">person</span>
-          </div>
-          <div className="sidebar-user">
-            <div className="name">OPERATOR_01</div>
-            <div className="role">Authenticated Session</div>
-          </div>
-        </div>
-        <div className="sidebar-nav">
-          <Button
-            type="button"
-            variant="ghost"
-            className={`sidebar-link ${view === 'overview' ? 'active' : ''}`}
-            onClick={() => setView('overview')}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={view === 'overview' ? { fontVariationSettings: "'FILL' 1" } : undefined}
-            >
-              dashboard
-            </span>
-            <span>Overview</span>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className={`sidebar-link ${view === 'sessions' ? 'active' : ''}`}
-            onClick={() => setView('sessions')}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={view === 'sessions' ? { fontVariationSettings: "'FILL' 1" } : undefined}
-            >
-              group
-            </span>
-            <span>Sessions</span>
-          </Button>
-        </div>
-        <div className="sidebar-footer">
-          <Button type="button" className="sidebar-action" disabled>
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-              play_arrow
-            </span>
-            INITIATE SCAN
-          </Button>
-        </div>
-      </nav>
-
       <div className="admin-main">
         <header className="top-nav">
           <span className="top-nav-brand">STEALTHGUARD_OS</span>
@@ -143,10 +90,25 @@ export default function App() {
                   setView('sessions')
                 }}
               />
+              {sessions.length > 2 && (
+                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                  <Button type="button" variant="secondary" onClick={() => setView('sessions')}>
+                    View all {sessions.length} sessions
+                  </Button>
+                </div>
+              )}
             </>
           )}
           {view === 'sessions' && (
             <>
+              <div style={{ marginBottom: '1rem' }}>
+                <Button type="button" variant="ghost" onClick={() => setView('overview')}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                    home
+                  </span>
+                  Overview
+                </Button>
+              </div>
               <SessionTable sessions={sessions} selectedId={selectedId} onSelect={setSelectedId} />
               <SessionDetailPanel
                 detail={detail}
