@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useEffect } from 'react'
+import { Button } from '@stealthguard/ui'
 import { DecisionBadge } from './DecisionBadge'
 
 interface Telemetry {
@@ -172,9 +173,9 @@ export function PersonaShowdown({ personas, results, onRun, onRunAll }: Props) {
     <section className="persona-showdown" aria-label="Compare personas">
       <div className="showdown-header">
         <h2>Persona Showdown</h2>
-        <button type="button" className="run-all-btn" onClick={handleRunAll}>
+        <Button type="button" variant="secondary" onClick={handleRunAll}>
           Run All
-        </button>
+        </Button>
       </div>
       <p className="showdown-desc">How would the system treat different inputs?</p>
       <div className="persona-grid">
@@ -203,14 +204,14 @@ export function PersonaShowdown({ personas, results, onRun, onRunAll }: Props) {
                   <DecisionBadge decision={r.decision} score={r.score} />
                 </div>
               )}
-              <button
+              <Button
                 type="button"
-                className="persona-run-btn"
+                variant="secondary"
                 onClick={() => onRun(name)}
                 data-testid={`persona-${name}`}
               >
                 {r ? 'Re-run' : 'Run'}
-              </button>
+              </Button>
             </div>
           )
         })}

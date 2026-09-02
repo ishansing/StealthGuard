@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Button } from '@stealthguard/ui'
 import { useStealthGuard, type Decision } from '@stealthguard/sdk'
 import './App.css'
 
@@ -64,12 +65,19 @@ function AccessibleChallenge({
 }) {
   const [answer, setAnswer] = useState('')
   const [result, setResult] = useState<Decision | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    const decision = await respondChallenge(answer)
-    setResult(decision)
-    setAnswer('')
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      const decision = await respondChallenge(answer)
+      setResult(decision)
+      setAnswer('')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const speak = () => {
@@ -98,18 +106,15 @@ function AccessibleChallenge({
           />
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button type="submit" className="login-btn" style={{ flex: 1 }}>
+          <Button type="submit" loading={submitting} style={{ flex: 1 }}>
             Submit
-          </button>
-          <button
-            type="button"
-            className="login-btn"
-            onClick={speak}
-            style={{ flex: 1, background: 'var(--surface-container-high)' }}
-          >
-            <span className="material-symbols-outlined">volume_up</span>
+          </Button>
+          <Button type="button" variant="secondary" onClick={speak} style={{ flex: 1 }}>
+            <span className="material-symbols-outlined" aria-hidden="true">
+              volume_up
+            </span>
             Audio
-          </button>
+          </Button>
         </div>
       </form>
       {result && (
@@ -140,10 +145,14 @@ export default function App() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (busy) return
     setBusy(true)
-    const result = await flush()
-    setSubmitted(result)
-    setBusy(false)
+    try {
+      const result = await flush()
+      setSubmitted(result)
+    } finally {
+      setBusy(false)
+    }
   }
 
   const activeDecision = submitted ?? decision
@@ -212,15 +221,16 @@ export default function App() {
               placeholder="••••••••"
             />
           </div>
-          <button type="submit" className="login-btn" disabled={busy || !ready} aria-label="Sign in">
+          <Button type="submit" disabled={!ready} loading={busy} aria-label="Sign in">
             <span>{busy ? 'Checking…' : 'LOGIN'}</span>
             <span
               className="material-symbols-outlined"
               style={{ fontVariationSettings: "'FILL' 1" }}
+              aria-hidden="true"
             >
               login
             </span>
-          </button>
+          </Button>
         </form>
 
         {decision?.decision === 'challenge' && (

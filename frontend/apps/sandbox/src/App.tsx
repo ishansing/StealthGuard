@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { Button, IconButton } from '@stealthguard/ui'
 import { useStealthGuard } from '@stealthguard/sdk'
 import { KeystrokeVisualizer } from './components/KeystrokeVisualizer'
 import { MousePathCanvas } from './components/MousePathCanvas'
@@ -163,15 +164,15 @@ export default function App() {
           <span className="top-nav-link active">SANDBOX</span>
         </nav>
         <div className="top-nav-actions">
-          <button type="button" disabled>
-            <span className="material-symbols-outlined">terminal</span>
-          </button>
-          <button type="button" disabled>
-            <span className="material-symbols-outlined">settings</span>
-          </button>
-          <button type="button" disabled>
-            <span className="material-symbols-outlined">account_circle</span>
-          </button>
+          <IconButton type="button" variant="ghost" icon="terminal" label="Terminal" disabled />
+          <IconButton type="button" variant="ghost" icon="settings" label="Settings" disabled />
+          <IconButton
+            type="button"
+            variant="ghost"
+            icon="account_circle"
+            label="Account"
+            disabled
+          />
         </div>
       </header>
 
@@ -196,18 +197,16 @@ export default function App() {
             />
           </div>
           <div className="input-actions">
-            <button
-              type="button"
-              className="score-btn"
-              disabled={!ready}
-              onClick={() => void flush()}
-              data-testid="score-it"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>
+            <Button type="button" disabled={!ready} onClick={() => flush()} data-testid="score-it">
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: '1.2rem' }}
+                aria-hidden="true"
+              >
                 analytics
               </span>
               Score it
-            </button>
+            </Button>
           </div>
         </section>
 
@@ -261,13 +260,9 @@ export default function App() {
           {activePersona && (
             <div className="viz-header">
               <span className="viz-active-persona">Viewing: {activePersona}</span>
-              <button
-                type="button"
-                className="viz-clear-btn"
-                onClick={() => setActivePersona(null)}
-              >
+              <Button type="button" variant="secondary" onClick={() => setActivePersona(null)}>
                 ← Back to live
-              </button>
+              </Button>
             </div>
           )}
           <KeystrokeVisualizer

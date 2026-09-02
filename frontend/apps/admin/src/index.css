@@ -1,6 +1,9 @@
 :root {
   color-scheme: dark;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   line-height: 1.5;
 
   --bg: #0d0d0d;
@@ -36,7 +39,11 @@ body {
 }
 
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
 }
 
 /* ── Layout ── */
@@ -117,7 +124,7 @@ body {
   gap: 2px;
 }
 
-.sidebar-link {
+.sidebar .sidebar-link {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -125,7 +132,9 @@ body {
   color: var(--muted);
   text-decoration: none;
   font-size: 0.85rem;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   border: none;
   background: none;
   width: 100%;
@@ -135,27 +144,27 @@ body {
   border-left: 2px solid transparent;
 }
 
-.sidebar-link:hover {
+.sidebar .sidebar-link:hover {
   background: var(--surface-container-high);
   color: var(--fg);
 }
 
-.sidebar-link.active {
+.sidebar .sidebar-link.active {
   background: rgba(108, 135, 175, 0.15);
   color: var(--primary);
   border-left: 2px solid var(--primary);
   opacity: 1;
 }
 
-.sidebar-link .material-symbols-outlined {
+.sidebar .sidebar-link .material-symbols-outlined {
   font-size: 20px;
 }
 
-.sidebar-link:disabled {
+.sidebar .sidebar-link:disabled {
   cursor: default;
 }
 
-.sidebar-link:disabled:hover {
+.sidebar .sidebar-link:disabled:hover {
   background: none;
   color: var(--muted);
 }
@@ -281,9 +290,15 @@ body {
   line-height: 1.1;
 }
 
-.stat-card .value.success { color: var(--success); }
-.stat-card .value.danger { color: var(--danger); }
-.stat-card .value.primary { color: var(--primary-light); }
+.stat-card .value.success {
+  color: var(--success);
+}
+.stat-card .value.danger {
+  color: var(--danger);
+}
+.stat-card .value.primary {
+  color: var(--primary-light);
+}
 
 .stat-card .meta {
   font-size: 0.75rem;
@@ -293,8 +308,12 @@ body {
   gap: 0.25rem;
 }
 
-.stat-card .meta.up { color: var(--success); }
-.stat-card .meta.warn { color: var(--danger); }
+.stat-card .meta.up {
+  color: var(--success);
+}
+.stat-card .meta.warn {
+  color: var(--danger);
+}
 
 /* ── Telemetry Grid ── */
 
@@ -374,6 +393,11 @@ body {
 .sessions tr {
   cursor: pointer;
   transition: background 0.15s;
+}
+
+.sessions tr:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
 }
 
 .sessions tbody tr:hover {
@@ -495,20 +519,6 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-.reviewer button {
-  background: var(--surface-container-high);
-  border: 1px solid var(--border);
-  color: var(--fg);
-  padding: 0.375rem 0.75rem;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.reviewer button:hover {
-  background: var(--surface-bright);
 }
 
 .reviewer [role='status'] {

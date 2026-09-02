@@ -146,7 +146,9 @@ function PageBreakdown({ sessions }: { sessions: SessionSummary[] }) {
       const p = s.page ?? 'unknown'
       pages[p] = (pages[p] ?? 0) + 1
     }
-    const entries = Object.entries(pages).sort((a, b) => b[1] - a[1]).slice(0, 5)
+    const entries = Object.entries(pages)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
     const max = Math.max(1, ...entries.map((e) => e[1]))
     const barH = 20
     const gap = 6
@@ -175,7 +177,11 @@ function PageBreakdown({ sessions }: { sessions: SessionSummary[] }) {
   return (
     <figure className="telemetry-figure">
       <figcaption>Top Pages</figcaption>
-      <canvas ref={ref} className="telemetry-canvas" aria-label="Page breakdown horizontal bar chart" />
+      <canvas
+        ref={ref}
+        className="telemetry-canvas"
+        aria-label="Page breakdown horizontal bar chart"
+      />
     </figure>
   )
 }

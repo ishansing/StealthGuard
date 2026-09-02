@@ -184,37 +184,6 @@ main {
   color: var(--muted);
 }
 
-.login-btn {
-  background: var(--primary);
-  color: var(--fg);
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  padding: 0.5rem;
-  margin-top: 0.5rem;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-  transition: opacity 0.2s;
-  text-transform: uppercase;
-}
-
-.login-btn:hover {
-  opacity: 0.9;
-}
-
-.login-btn:active {
-  transform: scale(0.98);
-}
-
-.login-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* ── Challenge ── */
 
 .challenge {
@@ -254,12 +223,4 @@ main {
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-}
-
-/* ── Reduced motion ── */
-
-@media (prefers-reduced-motion: reduce) {
-  .login-btn:active {
-    transform: none;
-  }
 }

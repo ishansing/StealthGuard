@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Button } from '@stealthguard/ui'
 
 import type { SessionDetail, TelemetryEvent } from '../api'
 
@@ -72,7 +73,11 @@ function KeystrokeChart({ events }: { events: TelemetryEvent[] }) {
       role="img"
       aria-label="Keystroke hold times"
     >
-      {keys.length === 0 && <p style={{ color: 'var(--muted)', padding: '0.75rem', fontSize: '0.85rem' }}>No keystrokes recorded.</p>}
+      {keys.length === 0 && (
+        <p style={{ color: 'var(--muted)', padding: '0.75rem', fontSize: '0.85rem' }}>
+          No keystrokes recorded.
+        </p>
+      )}
       {keys.map((hold, i) => (
         <div
           key={i}
@@ -97,22 +102,22 @@ export function SessionDetail({
   if (!detail) return <p className="hint">Select a session to inspect it.</p>
 
   const decisionColor =
-    detail.decision === 'allow' ? 'var(--success)' :
-    detail.decision === 'block' ? 'var(--danger)' :
-    'var(--warning)'
+    detail.decision === 'allow'
+      ? 'var(--success)'
+      : detail.decision === 'block'
+        ? 'var(--danger)'
+        : 'var(--warning)'
 
   return (
     <section className="detail-section" aria-label="Session detail">
       <div className="detail-header">
         <h2>Session {detail.session_id.slice(0, 8)}</h2>
-        <span className="meta">
-          Model: {detail.model_version ?? '—'}
-        </span>
+        <span className="meta">Model: {detail.model_version ?? '—'}</span>
       </div>
       <div className="detail-body">
         <p style={{ marginBottom: '0.75rem' }}>
-          Decision: <strong style={{ color: decisionColor }}>{detail.decision ?? '—'}</strong> · Score:{' '}
-          {detail.humanness_score?.toFixed(3) ?? '—'}
+          Decision: <strong style={{ color: decisionColor }}>{detail.decision ?? '—'}</strong> ·
+          Score: {detail.humanness_score?.toFixed(3) ?? '—'}
         </p>
 
         {detail.reason_codes.length > 0 && (
@@ -139,12 +144,22 @@ export function SessionDetail({
 
       <div className="reviewer">
         <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Reviewer feedback:</span>
-        <button type="button" onClick={() => onFeedback('human')} data-testid="mark-human">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onFeedback('human')}
+          data-testid="mark-human"
+        >
           Mark as human
-        </button>
-        <button type="button" onClick={() => onFeedback('bot')} data-testid="mark-bot">
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onFeedback('bot')}
+          data-testid="mark-bot"
+        >
           Mark as bot
-        </button>
+        </Button>
         {feedbackStatus && (
           <span role="status" data-testid="feedback-status">
             {feedbackStatus}

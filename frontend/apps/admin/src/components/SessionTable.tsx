@@ -27,7 +27,12 @@ export function SessionTable({
           <tbody>
             {sessions.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}>No sessions yet.</td>
+                <td
+                  colSpan={6}
+                  style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}
+                >
+                  No sessions yet.
+                </td>
               </tr>
             )}
             {sessions.map((s) => (
@@ -35,6 +40,13 @@ export function SessionTable({
                 key={s.session_id}
                 className={s.session_id === selectedId ? 'selected' : ''}
                 onClick={() => onSelect(s.session_id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onSelect(s.session_id)
+                  }
+                }}
+                tabIndex={0}
                 data-testid={`session-row-${s.session_id}`}
               >
                 <td>{s.session_id.slice(0, 8)}</td>

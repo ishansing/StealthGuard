@@ -65,19 +65,6 @@
   color: var(--primary);
 }
 
-.top-nav-actions button {
-  background: none;
-  border: none;
-  color: inherit;
-  padding: 0.25rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.top-nav-actions button:hover {
-  background: var(--surface-container-highest);
-}
-
 /* ── Main Content ── */
 
 .main-content {
@@ -159,35 +146,6 @@
 .input-actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.score-btn {
-  background: var(--primary);
-  color: #fff;
-  font-size: 1.1rem;
-  font-weight: 600;
-  padding: 0.5rem 1.5rem;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition:
-    opacity 0.2s,
-    transform 0.1s;
-}
-
-.score-btn:hover {
-  opacity: 0.9;
-}
-
-.score-btn:active {
-  transform: scale(0.98);
-}
-
-.score-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* ── Rhythm Bar ── */
@@ -331,20 +289,6 @@
   font-weight: 600;
 }
 
-.viz-clear-btn {
-  background: var(--surface-container-high);
-  border: 1px solid var(--border);
-  color: var(--fg);
-  padding: 0.25rem 0.5rem;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.viz-clear-btn:hover {
-  background: var(--surface-bright);
-}
-
 .keystroke-viz,
 .mouse-viz {
   display: flex;
@@ -464,20 +408,6 @@
   color: var(--muted);
 }
 
-.run-all-btn {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.run-all-btn:hover {
-  opacity: 0.9;
-}
-
 .showdown-desc {
   font-size: 0.85rem;
   color: var(--muted);
@@ -554,22 +484,6 @@
   height: 100%;
   background: var(--primary);
   transition: width 0.3s;
-}
-
-.persona-run-btn {
-  background: var(--surface-container-high);
-  border: 1px solid var(--border);
-  color: var(--fg);
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: background 0.15s;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.persona-run-btn:hover {
-  background: var(--surface-bright);
 }
 
 /* ── Results List ── */
@@ -664,9 +578,6 @@
   .rhythm-marker,
   .mini-score-fill {
     transition: none;
-  }
-  .score-btn:active {
-    transform: none;
   }
 }
 

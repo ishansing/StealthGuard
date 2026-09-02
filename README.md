@@ -176,6 +176,7 @@ See [docs/observability.md](docs/observability.md).
 - Threat model: [`THREAT_MODEL.md`](THREAT_MODEL.md)
 - SDK integration: [`docs/sdk-integration-guide.md`](docs/sdk-integration-guide.md)
 - Deployment: [`docs/deployment.md`](docs/deployment.md)
+- Frontend rules for agents: [`frontend/AGENT_GUIDELINES.md`](frontend/AGENT_GUIDELINES.md)
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md) · Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 ## License

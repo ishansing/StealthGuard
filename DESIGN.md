@@ -104,6 +104,11 @@ Dark mode is **automatic**, not user-selectable. This is intentional: the demo m
 
 ## Pages & Components
 
+> **Canonical interactive primitives:** every `<button>` / icon button / link button
+> must come from `@stealthguard/ui` (`Button`, `IconButton`, `LinkButton`) in
+> `frontend/packages/ui` — the single source of truth for states, focus rings,
+> and pending/disabled guards. See `frontend/AGENT_GUIDELINES.md`.
+
 ### 1. Demo App (`/`)
 
 **Purpose:** End-user facing. A fake login form that passively scores visitors in real-time.

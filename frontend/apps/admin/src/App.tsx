@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Button } from '@stealthguard/ui'
 
 import {
   fetchSession,
@@ -71,26 +72,42 @@ export default function App() {
           </div>
         </div>
         <div className="sidebar-nav">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
             className={`sidebar-link ${view === 'overview' ? 'active' : ''}`}
             onClick={() => setView('overview')}
           >
-            <span className="material-symbols-outlined" style={view === 'overview' ? { fontVariationSettings: "'FILL' 1" } : undefined}>dashboard</span>
+            <span
+              className="material-symbols-outlined"
+              style={view === 'overview' ? { fontVariationSettings: "'FILL' 1" } : undefined}
+            >
+              dashboard
+            </span>
             <span>Overview</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
             className={`sidebar-link ${view === 'sessions' ? 'active' : ''}`}
             onClick={() => setView('sessions')}
           >
-            <span className="material-symbols-outlined" style={view === 'sessions' ? { fontVariationSettings: "'FILL' 1" } : undefined}>group</span>
+            <span
+              className="material-symbols-outlined"
+              style={view === 'sessions' ? { fontVariationSettings: "'FILL' 1" } : undefined}
+            >
+              group
+            </span>
             <span>Sessions</span>
-          </button>
+          </Button>
         </div>
         <div className="sidebar-footer">
-          <button className="sidebar-action" disabled>
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>play_arrow</span>
+          <Button type="button" className="sidebar-action" disabled>
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+              play_arrow
+            </span>
             INITIATE SCAN
-          </button>
+          </Button>
         </div>
       </nav>
 
@@ -121,11 +138,7 @@ export default function App() {
           )}
           {view === 'sessions' && (
             <>
-              <SessionTable
-                sessions={sessions}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-              />
+              <SessionTable sessions={sessions} selectedId={selectedId} onSelect={setSelectedId} />
               <SessionDetailPanel
                 detail={detail}
                 feedbackStatus={feedbackStatus}
