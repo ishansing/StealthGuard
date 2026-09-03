@@ -9,37 +9,48 @@
 /* ── Top Nav ── */
 
 .top-nav {
+  position: relative;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
   height: 4rem;
   flex-shrink: 0;
   z-index: 50;
 }
 
+.top-nav .top-nav-links {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .top-nav-brand {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+}
+
+.top-nav-brand::first-letter {
   color: var(--primary);
 }
 
 .top-nav-links {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 0.25rem;
 }
 
 .top-nav-link {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--muted);
   text-decoration: none;
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
   transition:
     color 0.2s,
     background 0.2s;
@@ -50,19 +61,47 @@
 
 .top-nav-link:hover {
   color: var(--fg);
-  background: var(--surface-container-highest);
+  background: var(--surface-container-high);
 }
 
 .top-nav-link.active {
-  color: var(--primary);
-  border-bottom: 1px solid var(--primary);
+  color: var(--primary-light);
+  background: var(--surface-container);
+  border: 1px solid var(--border);
 }
 
-.top-nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--primary);
+.top-nav .top-nav-hamburger {
+  display: none;
+  margin-left: auto;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.top-nav-hamburger[aria-expanded='true'] .material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 500,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+/* ── Mobile Menu ── */
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem 0.75rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-menu .top-nav-link {
+  display: block;
+  width: 100%;
+  text-align: left;
 }
 
 /* ── Main Content ── */
@@ -72,7 +111,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 2rem 1rem;
 }
 
 .demo-container {
@@ -89,6 +128,12 @@
   .top-nav-links {
     display: none;
   }
+  .top-nav .top-nav-hamburger {
+    display: flex;
+  }
+  .mobile-menu {
+    display: flex;
+  }
 }
 
 /* ── Header ── */
@@ -101,14 +146,14 @@
 }
 
 .demo-header h1 {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--primary-light);
+  color: var(--fg);
 }
 
 .tagline {
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: var(--muted);
 }
 
@@ -116,8 +161,9 @@
 
 .status-panel {
   background: var(--surface);
-  border: 1px dashed var(--border);
-  padding: 1rem;
+  border: 1px solid var(--border);
+  padding: 1.25rem;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -128,11 +174,11 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
 }
 
 .status-header .label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--muted);
@@ -141,8 +187,9 @@
 .status-header .status {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.85rem;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 500;
   color: var(--success);
 }
 
@@ -155,7 +202,7 @@
 .status-cell {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.3rem;
 }
 
 .status-cell.right {
@@ -163,14 +210,14 @@
 }
 
 .status-cell .label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--muted);
 }
 
 .status-cell .value {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--success);
 }
@@ -181,11 +228,11 @@
 
 .reasons-section {
   border-top: 1px solid var(--border);
-  padding-top: 0.5rem;
+  padding-top: 0.75rem;
 }
 
 .reasons-section .label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--muted);
@@ -200,10 +247,11 @@
 }
 
 .reason-tag {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   background: var(--surface-container-high);
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.6rem;
   border: 1px solid var(--border);
+  border-radius: 4px;
   color: var(--fg-variant);
   letter-spacing: 0.05em;
 }
@@ -216,27 +264,29 @@
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
-  gap: 1.5rem;
+  gap: 1.25rem;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .login-panel h2 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: var(--fg);
   border-bottom: 1px solid var(--border);
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
+  margin: 0;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
 .form-group label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--muted);
@@ -245,16 +295,20 @@
 .form-group input {
   background: var(--bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  font-size: 1rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
   color: var(--fg);
+  border-radius: 6px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .form-group input:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .form-group input::placeholder {
@@ -265,39 +319,41 @@
 
 .challenge {
   border: 1px dashed var(--border);
-  padding: 1rem;
+  padding: 1.25rem;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .challenge h2 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   margin: 0;
 }
 
 .challenge form {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
 }
 
 /* ── Footer ── */
 
 .demo-footer {
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   border-top: 1px solid var(--border);
   padding-top: 1rem;
 }
 
 .demo-footer p {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }

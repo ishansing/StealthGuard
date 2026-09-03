@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Button } from '@stealthguard/ui'
+import { Button, IconButton } from '@stealthguard/ui'
 import { useStealthGuard, type Decision } from '@stealthguard/sdk'
 import './App.css'
 
@@ -138,6 +138,7 @@ export default function App() {
     page: '/login',
     flushIntervalMs: 60000,
   })
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [submitted, setSubmitted] = useState<Decision | null>(null)
@@ -175,7 +176,7 @@ export default function App() {
     <div className="app-layout">
       {/* Top Nav */}
       <header className="top-nav">
-        <span className="top-nav-brand">STEALTHGUARD_OS</span>
+        <span className="top-nav-brand">StealthGuard</span>
         <nav className="top-nav-links">
           <span className="top-nav-link active">DEMO</span>
           <a className="top-nav-link" href="http://localhost:5174">
@@ -185,12 +186,31 @@ export default function App() {
             SANDBOX
           </a>
         </nav>
-        <div className="top-nav-actions">
-          <span className="material-symbols-outlined">terminal</span>
-          <span className="material-symbols-outlined">settings</span>
-          <span className="material-symbols-outlined">account_circle</span>
-        </div>
+
+        <IconButton
+          type="button"
+          variant="ghost"
+          icon={mobileOpen ? 'close' : 'menu'}
+          label="Toggle navigation menu"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-menu"
+          onClick={() => setMobileOpen((o) => !o)}
+          className="top-nav-hamburger"
+        />
       </header>
+
+      {/* Mobile Nav */}
+      {mobileOpen && (
+        <nav className="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
+          <span className="top-nav-link active">DEMO</span>
+          <a className="top-nav-link" href="http://localhost:5174">
+            ADMIN
+          </a>
+          <a className="top-nav-link" href="http://localhost:5175">
+            SANDBOX
+          </a>
+        </nav>
+      )}
 
       {/* Main Content */}
       <main className="main-content">
@@ -263,7 +283,7 @@ export default function App() {
               <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
                 monitoring
               </span>
-              Session is actively monitored by StealthGuard OS
+              Session is actively monitored by StealthGuard
             </p>
           </footer>
         </div>
