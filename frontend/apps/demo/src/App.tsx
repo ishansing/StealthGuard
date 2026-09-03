@@ -175,7 +175,7 @@ export default function App() {
     <div className="app-layout">
       {/* Top Nav */}
       <header className="top-nav">
-        <span className="top-nav-brand">STEALTHGUARD_OS</span>
+        <span className="top-nav-brand">StealthGuard</span>
         <nav className="top-nav-links">
           <span className="top-nav-link active">DEMO</span>
           <a className="top-nav-link" href="http://localhost:5174">
@@ -263,7 +263,7 @@ export default function App() {
               <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
                 monitoring
               </span>
-              Session is actively monitored by StealthGuard OS
+              Session is actively monitored by StealthGuard
             </p>
           </footer>
         </div>

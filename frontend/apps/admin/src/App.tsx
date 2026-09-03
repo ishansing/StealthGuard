@@ -60,7 +60,7 @@ export default function App() {
     <div className="admin-layout">
       <div className="admin-main">
         <header className="top-nav">
-          <span className="top-nav-brand">STEALTHGUARD_OS</span>
+          <span className="top-nav-brand">StealthGuard</span>
           <nav className="top-nav-links">
             <a className="top-nav-link" href="http://localhost:5173">
               DEMO
