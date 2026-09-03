@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button } from '@stealthguard/ui'
+import { Button, IconButton } from '@stealthguard/ui'
 
 import {
   fetchSession,
@@ -24,6 +24,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<SessionDetail | null>(null)
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
     const load = (): void => {
@@ -71,7 +72,32 @@ export default function App() {
             </a>
           </nav>
 
+          <IconButton
+            type="button"
+            variant="ghost"
+            icon={mobileOpen ? 'close' : 'menu'}
+            label="Toggle navigation menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
+            onClick={() => setMobileOpen((o) => !o)}
+            className="top-nav-hamburger"
+          />
         </header>
+
+        {/* Mobile Nav */}
+        {mobileOpen && (
+          <nav className="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
+            <a className="top-nav-link" href="http://localhost:5173">
+              DEMO
+            </a>
+            <a className="top-nav-link active" href="http://localhost:5174">
+              ADMIN
+            </a>
+            <a className="top-nav-link" href="http://localhost:5175">
+              SANDBOX
+            </a>
+          </nav>
+        )}
 
         <div className="dashboard-content">
           {view === 'overview' && (

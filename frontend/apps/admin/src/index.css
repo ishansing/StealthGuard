@@ -151,6 +151,40 @@ body {
   border: 1px solid var(--border);
 }
 
+.top-nav .top-nav-hamburger {
+  display: none;
+  margin-left: auto;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.top-nav[aria-expanded='true'] .top-nav-hamburger .material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 500,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+/* ── Mobile Menu ── */
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem 0.75rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-menu .top-nav-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
 .dashboard-content {
   flex: 1;
   overflow-y: auto;
@@ -458,6 +492,12 @@ body {
 @media (max-width: 600px) {
   .top-nav-links {
     display: none;
+  }
+  .top-nav .top-nav-hamburger {
+    display: flex;
+  }
+  .mobile-menu {
+    display: flex;
   }
   .stats-grid {
     grid-template-columns: 1fr;

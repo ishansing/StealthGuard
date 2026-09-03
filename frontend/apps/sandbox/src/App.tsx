@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { Button } from '@stealthguard/ui'
+import { Button, IconButton } from '@stealthguard/ui'
 import { useStealthGuard } from '@stealthguard/sdk'
 import { KeystrokeVisualizer } from './components/KeystrokeVisualizer'
 import { MousePathCanvas } from './components/MousePathCanvas'
@@ -74,6 +74,7 @@ export default function App() {
   const keystrokeBuffer = useRef<Array<{ key: string; holdMs: number }>>([])
   const mouseBuffer = useRef<Array<{ x: number; y: number; t: number }>>([])
   const [, setTick] = useState(0)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const onKeystroke = useCallback((e: { key: string; holdMs: number }) => {
     keystrokeBuffer.current = [...keystrokeBuffer.current.slice(-29), e]
@@ -164,7 +165,32 @@ export default function App() {
           <span className="top-nav-link active">SANDBOX</span>
         </nav>
 
+        <IconButton
+          type="button"
+          variant="ghost"
+          icon={mobileOpen ? 'close' : 'menu'}
+          label="Toggle navigation menu"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-menu"
+          onClick={() => setMobileOpen((o) => !o)}
+          className="top-nav-hamburger"
+        />
       </header>
+
+      {/* Mobile Nav */}
+      {mobileOpen && (
+        <nav className="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
+          <a className="top-nav-link" href="http://localhost:5173">
+            DEMO
+          </a>
+          <a className="top-nav-link" href="http://localhost:5174">
+            ADMIN
+          </a>
+          <a className="top-nav-link active" href="http://localhost:5175">
+            SANDBOX
+          </a>
+        </nav>
+      )}
 
       {/* Main Content */}
       <main className="main-content">
