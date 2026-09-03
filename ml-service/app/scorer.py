@@ -79,6 +79,25 @@ def sigmoid(x: float) -> float:
     return 1.0 / (1.0 + math.exp(-x))
 
 
+# Clamp standardized feature values to this many standard deviations before
+# weighting. Anchored on live telemetry: a single outlier feature (e.g.
+# micro-tremor on a buffer that holds only mouse jitter) used to drive the
+# logit unboundedly and pin a near-empty session to a confident "human" 1.0.
+# Genuine human sessions stay within ~±3σ (verified unchanged); only
+# outlier-dominated buffers are pulled away from extreme scores.
+Z_CLIP = 3.0
+
+# Small-sample keyboard prior (rule-based baseline only). The baseline assumes
+# plentiful keyboard AND mouse telemetry, so a short-but-real typing burst
+# (e.g. a 1–2 key test) scores ~0 because absent-mouse and low keystroke
+# variance are treated as bot evidence. Pull such sessions toward the neutral
+# 0.5, but only when there is genuine keyboard input, and taper the pull as the
+# input grows (so a real bot with many keystrokes is still flagged low, and a
+# mouse-only / jitter buffer with zero keystrokes is left untouched).
+KEYBOARD_PRIOR = 4.0
+KEYBOARD_DECAY = 2.0
+
+
 def label_for_score(score: float, human_threshold: float, bot_threshold: float) -> str:
     if score >= human_threshold:
         return "human"
@@ -210,6 +229,10 @@ class RuleBasedScorer(Scorer):
             if feature not in features:
                 continue
             z = (features[feature] - mean) / std if std else 0.0
+            if z < -Z_CLIP:
+                z = -Z_CLIP
+            elif z > Z_CLIP:
+                z = Z_CLIP
             contribution = weight * direction * z
             contributions[feature] = contribution
             logit += contribution
@@ -218,6 +241,11 @@ class RuleBasedScorer(Scorer):
     def score(self, features: dict[str, float]) -> ScoreResult:
         logit, contributions = self._logit(features)
         humanness = sigmoid(logit)
+        if KEYBOARD_PRIOR > 0.0:
+            keyboard_count = features.get("event_count", 0.0) * features.get("keystroke_share", 0.0)
+            if keyboard_count > 0.0:
+                shrink = min(1.0, KEYBOARD_PRIOR * math.exp(-keyboard_count / KEYBOARD_DECAY))
+                humanness = humanness + (0.5 - humanness) * shrink
         human_t, bot_t = thresholds_for_features(
             features, (self.human_threshold, self.bot_threshold), self.modality_thresholds
         )
@@ -277,7 +305,7 @@ class MLScorer(Scorer):
                 z.append(0.0)
             else:
                 x = features.get(f, mean)
-                z.append((x - mean) / std)
+                z.append(max(-Z_CLIP, min(Z_CLIP, (x - mean) / std)))
         return z
 
     def score(self, features: dict[str, float]) -> ScoreResult:
