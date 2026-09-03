@@ -185,11 +185,7 @@ export default function App() {
             SANDBOX
           </a>
         </nav>
-        <div className="top-nav-actions">
-          <span className="material-symbols-outlined">terminal</span>
-          <span className="material-symbols-outlined">settings</span>
-          <span className="material-symbols-outlined">account_circle</span>
-        </div>
+
       </header>
 
       {/* Main Content */}

@@ -68,11 +68,16 @@ body {
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 0 1.5rem;
   height: 4rem;
   flex-shrink: 0;
+}
+
+.top-nav .top-nav-links {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .top-nav-brand {
@@ -111,22 +116,6 @@ body {
 .top-nav-link.active {
   color: var(--primary);
   border-bottom: 1px solid var(--primary);
-}
-
-.top-nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.top-nav-actions .material-symbols-outlined {
-  color: var(--primary);
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.top-nav-actions .material-symbols-outlined:hover {
-  color: var(--fg);
 }
 
 .dashboard-content {

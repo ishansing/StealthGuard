@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { Button, IconButton } from '@stealthguard/ui'
+import { Button } from '@stealthguard/ui'
 import { useStealthGuard } from '@stealthguard/sdk'
 import { KeystrokeVisualizer } from './components/KeystrokeVisualizer'
 import { MousePathCanvas } from './components/MousePathCanvas'
@@ -163,17 +163,7 @@ export default function App() {
           </a>
           <span className="top-nav-link active">SANDBOX</span>
         </nav>
-        <div className="top-nav-actions">
-          <IconButton type="button" variant="ghost" icon="terminal" label="Terminal" disabled />
-          <IconButton type="button" variant="ghost" icon="settings" label="Settings" disabled />
-          <IconButton
-            type="button"
-            variant="ghost"
-            icon="account_circle"
-            label="Account"
-            disabled
-          />
-        </div>
+
       </header>
 
       {/* Main Content */}
