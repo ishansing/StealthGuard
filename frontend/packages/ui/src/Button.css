@@ -5,24 +5,26 @@
   gap: 0.5rem;
   position: relative;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   line-height: 1.5;
-  padding: 0.5rem 1.5rem;
+  padding: 0.6rem 1.5rem;
   border: 1px solid transparent;
-  border-radius: 0.125rem;
+  border-radius: 8px;
   cursor: pointer;
   user-select: none;
   text-decoration: none;
   transition:
     opacity 0.2s,
     background-color 0.2s,
-    transform 0.1s;
+    border-color 0.2s,
+    transform 0.1s,
+    box-shadow 0.2s;
 }
 
 .sg-button:focus-visible {
-  outline: 2px solid var(--primary, #6c87af);
+  outline: 2px solid var(--primary, #4f9cf0);
   outline-offset: 2px;
 }
 
@@ -39,32 +41,33 @@
 /* ── Variants ── */
 
 .sg-button--primary {
-  background: var(--primary, #6c87af);
-  color: #fff;
+  background: var(--primary, #4f9cf0);
+  color: #081019;
 }
 
 .sg-button--primary:hover:not(:disabled) {
-  opacity: 0.9;
+  opacity: 0.92;
+  box-shadow: 0 4px 16px rgba(79, 156, 240, 0.35);
 }
 
 .sg-button--secondary {
-  background: var(--surface-container-high, #2a2a2a);
-  border-color: var(--border, #2d2d2d);
-  color: var(--fg, #e5e2e1);
+  background: var(--surface-container-high, #1e242f);
+  border-color: var(--border, #232a37);
+  color: var(--fg, #e6ebf2);
 }
 
 .sg-button--secondary:hover:not(:disabled) {
-  background: var(--surface-bright, #3a3939);
+  background: var(--surface-bright, #2f3849);
 }
 
 .sg-button--ghost {
   background: transparent;
   border-color: transparent;
-  color: var(--primary, #6c87af);
+  color: var(--primary-light, #9cc8f7);
 }
 
 .sg-button--ghost:hover:not(:disabled) {
-  background: var(--surface-container-high, #2a2a2a);
+  background: var(--surface-container-high, #1e242f);
 }
 
 /* ── Loading ── */

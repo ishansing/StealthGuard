@@ -43,3 +43,10 @@ blob-report/
 .vscode/
 .idea/
 *.swp
+
+# ---- Fonts (unused legacy variants + samples) ----
+frontend/assets/font/*.eot
+frontend/assets/font/*.ttf
+frontend/assets/font/*Shadow.*
+frontend/assets/font/demo.html
+frontend/assets/font/stylesheet.css
