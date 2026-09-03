@@ -1,4 +1,11 @@
-from app.scorer import LABEL_DICT, RuleBasedScorer, label_for_score, top_reason_codes
+from app.scorer import (
+    LABEL_DICT,
+    Z_CLIP,
+    RuleBasedScorer,
+    label_for_score,
+    sigmoid,
+    top_reason_codes,
+)
 
 HUMAN_FEATURES = {
     "keystroke_mean_hold_ms": 95.0,
@@ -70,3 +77,64 @@ def test_reason_codes_shape_and_mapping() -> None:
     assert codes[0].code == LABEL_DICT["keystroke_std_hold_ms"]["human"]
     assert codes[1].code == LABEL_DICT["mouse_path_efficiency"]["bot"]
     assert all(c.weight >= 0.0 for c in codes)
+
+
+def test_zclip_bounds_extreme_outliers() -> None:
+    scorer = RuleBasedScorer(0.8, 0.4)
+    mean, std, direction, weight = scorer.HUMAN_BASELINE["micro_tremor_px_per_s2"]
+
+    features1 = dict(HUMAN_FEATURES)
+    features1["micro_tremor_px_per_s2"] = 1_000_000.0
+    features2 = dict(HUMAN_FEATURES)
+    features2["micro_tremor_px_per_s2"] = 2_000_000.0
+
+    _, c1 = scorer._logit(features1)
+    _, c2 = scorer._logit(features2)
+
+    raw_z1 = (features1["micro_tremor_px_per_s2"] - mean) / std
+    assert raw_z1 > Z_CLIP
+    assert c1["micro_tremor_px_per_s2"] == weight * direction * Z_CLIP
+    assert c2["micro_tremor_px_per_s2"] == c1["micro_tremor_px_per_s2"]
+
+
+def test_score_and_reason_codes_follow_the_same_logit() -> None:
+    scorer = RuleBasedScorer(0.8, 0.4)
+    features = dict(BOT_FEATURES)
+    features["keystroke_share"] = 0.5
+    logit, contributions = scorer._logit(features)
+    assert logit == sum(contributions.values())
+    result = scorer.score(features)
+    assert result.humanness_score == round(sigmoid(logit), 4)
+
+
+def test_keyboard_prior_pulls_short_session_toward_neutral() -> None:
+    scorer = RuleBasedScorer(0.8, 0.4)
+    features = dict(BOT_FEATURES)
+    features["keystroke_share"] = 1.0
+    features["event_count"] = 2.0
+    assert scorer._prior_dampening(features) == 0.0
+    result = scorer.score(features)
+    assert result.humanness_score == 0.5
+    assert result.label == "uncertain"
+
+
+def test_keyboard_prior_taper_with_more_keystrokes() -> None:
+    scorer = RuleBasedScorer(0.8, 0.4)
+    burst = scorer._prior_dampening({"event_count": 2.0, "keystroke_share": 1.0})
+    full = scorer._prior_dampening({"event_count": 300.0, "keystroke_share": 1.0})
+    mouse_only = scorer._prior_dampening({"event_count": 100.0, "keystroke_share": 0.0})
+    assert burst < full
+    assert mouse_only == 1.0
+
+
+def test_reason_codes_stay_consistent_with_prior_active() -> None:
+    scorer = RuleBasedScorer(0.8, 0.4)
+    features = dict(BOT_FEATURES)
+    features["keystroke_share"] = 1.0
+    features["event_count"] = 2.0
+    logit, contributions = scorer._logit(features)
+    result = scorer.score(features)
+    assert logit == sum(contributions.values())
+    assert result.humanness_score == round(sigmoid(logit), 4)
+    assert result.humanness_score == 0.5
+    assert all(code.weight == 0.0 for code in result.reason_codes)

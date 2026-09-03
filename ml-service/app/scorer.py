@@ -222,7 +222,26 @@ class RuleBasedScorer(Scorer):
         self.version = model_version
         self.model_version = model_version
 
+    def _prior_dampening(self, features: dict[str, float]) -> float:
+        """Uniform dampening factor from the small-sample keyboard prior.
+
+        Returns a multiplier in [0, 1] applied to every feature contribution. A
+        short-but-real typing burst yields a high dampening (the score is pulled
+        toward the neutral 0.5), while a full session or a mouse-only buffer gets
+        ~1.0 (unchanged). Applying it to each contribution keeps the logit, label,
+        and reason codes mutually consistent — they all derive from the same
+        dampened values — so the returned explanation always matches the score.
+        """
+        if KEYBOARD_PRIOR <= 0.0:
+            return 1.0
+        keyboard_count = features.get("event_count", 0.0) * features.get("keystroke_share", 0.0)
+        if keyboard_count <= 0.0:
+            return 1.0
+        shrink = min(1.0, KEYBOARD_PRIOR * math.exp(-keyboard_count / KEYBOARD_DECAY))
+        return 1.0 - shrink
+
     def _logit(self, features: dict[str, float]) -> tuple[float, dict[str, float]]:
+        dampening = self._prior_dampening(features)
         logit = 0.0
         contributions: dict[str, float] = {}
         for feature, (mean, std, direction, weight) in self.HUMAN_BASELINE.items():
@@ -233,7 +252,7 @@ class RuleBasedScorer(Scorer):
                 z = -Z_CLIP
             elif z > Z_CLIP:
                 z = Z_CLIP
-            contribution = weight * direction * z
+            contribution = weight * direction * z * dampening
             contributions[feature] = contribution
             logit += contribution
         return logit, contributions
@@ -241,11 +260,6 @@ class RuleBasedScorer(Scorer):
     def score(self, features: dict[str, float]) -> ScoreResult:
         logit, contributions = self._logit(features)
         humanness = sigmoid(logit)
-        if KEYBOARD_PRIOR > 0.0:
-            keyboard_count = features.get("event_count", 0.0) * features.get("keystroke_share", 0.0)
-            if keyboard_count > 0.0:
-                shrink = min(1.0, KEYBOARD_PRIOR * math.exp(-keyboard_count / KEYBOARD_DECAY))
-                humanness = humanness + (0.5 - humanness) * shrink
         human_t, bot_t = thresholds_for_features(
             features, (self.human_threshold, self.bot_threshold), self.modality_thresholds
         )
