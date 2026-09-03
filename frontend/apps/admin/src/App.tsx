@@ -90,9 +90,7 @@ export default function App() {
             <a className="top-nav-link" href="http://localhost:5173">
               DEMO
             </a>
-            <a className="top-nav-link active" href="http://localhost:5174">
-              ADMIN
-            </a>
+            <span className="top-nav-link active">ADMIN</span>
             <a className="top-nav-link" href="http://localhost:5175">
               SANDBOX
             </a>

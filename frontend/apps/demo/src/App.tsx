@@ -202,9 +202,7 @@ export default function App() {
       {/* Mobile Nav */}
       {mobileOpen && (
         <nav className="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
-          <a className="top-nav-link active" href="http://localhost:5173">
-            DEMO
-          </a>
+          <span className="top-nav-link active">DEMO</span>
           <a className="top-nav-link" href="http://localhost:5174">
             ADMIN
           </a>

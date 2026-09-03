@@ -9,6 +9,7 @@
 /* ── Top Nav ── */
 
 .top-nav {
+  position: relative;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   display: flex;
@@ -78,7 +79,7 @@
   flex-shrink: 0;
 }
 
-.top-nav[aria-expanded='true'] .top-nav-hamburger .material-symbols-outlined {
+.top-nav-hamburger[aria-expanded='true'] .material-symbols-outlined {
   font-variation-settings:
     'FILL' 0,
     'wght' 500,

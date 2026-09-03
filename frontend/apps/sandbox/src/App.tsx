@@ -186,9 +186,7 @@ export default function App() {
           <a className="top-nav-link" href="http://localhost:5174">
             ADMIN
           </a>
-          <a className="top-nav-link active" href="http://localhost:5175">
-            SANDBOX
-          </a>
+          <span className="top-nav-link active">SANDBOX</span>
         </nav>
       )}
 
