@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Button, IconButton } from '@stealthguard/ui'
 
 import {
   fetchSession,
@@ -23,6 +24,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<SessionDetail | null>(null)
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
     const load = (): void => {
@@ -57,52 +59,43 @@ export default function App() {
 
   return (
     <div className="admin-layout">
-      <nav className="sidebar" aria-label="Main navigation">
-        <div className="sidebar-brand">
-          <h1>STEALTHGUARD_OS</h1>
-        </div>
-        <div className="sidebar-profile">
-          <div className="sidebar-avatar">
-            <span className="material-symbols-outlined">person</span>
-          </div>
-          <div className="sidebar-user">
-            <div className="name">OPERATOR_01</div>
-            <div className="role">Authenticated Session</div>
-          </div>
-        </div>
-        <div className="sidebar-nav">
-          <button
-            className={`sidebar-link ${view === 'overview' ? 'active' : ''}`}
-            onClick={() => setView('overview')}
-          >
-            <span className="material-symbols-outlined" style={view === 'overview' ? { fontVariationSettings: "'FILL' 1" } : undefined}>dashboard</span>
-            <span>Overview</span>
-          </button>
-          <button
-            className={`sidebar-link ${view === 'sessions' ? 'active' : ''}`}
-            onClick={() => setView('sessions')}
-          >
-            <span className="material-symbols-outlined" style={view === 'sessions' ? { fontVariationSettings: "'FILL' 1" } : undefined}>group</span>
-            <span>Sessions</span>
-          </button>
-        </div>
-        <div className="sidebar-footer">
-          <button className="sidebar-action" disabled>
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>play_arrow</span>
-            INITIATE SCAN
-          </button>
-        </div>
-      </nav>
-
       <div className="admin-main">
         <header className="top-nav">
-          <span className="top-nav-title">ADMIN</span>
-          <div className="top-nav-actions">
-            <span className="material-symbols-outlined">terminal</span>
-            <span className="material-symbols-outlined">settings</span>
-            <span className="material-symbols-outlined">account_circle</span>
-          </div>
+          <span className="top-nav-brand">StealthGuard</span>
+          <nav className="top-nav-links">
+            <a className="top-nav-link" href="http://localhost:5173">
+              DEMO
+            </a>
+            <span className="top-nav-link active">ADMIN</span>
+            <a className="top-nav-link" href="http://localhost:5175">
+              SANDBOX
+            </a>
+          </nav>
+
+          <IconButton
+            type="button"
+            variant="ghost"
+            icon={mobileOpen ? 'close' : 'menu'}
+            label="Toggle navigation menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
+            onClick={() => setMobileOpen((o) => !o)}
+            className="top-nav-hamburger"
+          />
         </header>
+
+        {/* Mobile Nav */}
+        {mobileOpen && (
+          <nav className="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
+            <a className="top-nav-link" href="http://localhost:5173">
+              DEMO
+            </a>
+            <span className="top-nav-link active">ADMIN</span>
+            <a className="top-nav-link" href="http://localhost:5175">
+              SANDBOX
+            </a>
+          </nav>
+        )}
 
         <div className="dashboard-content">
           {view === 'overview' && (
@@ -117,15 +110,26 @@ export default function App() {
                   setView('sessions')
                 }}
               />
+              {sessions.length > 2 && (
+                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                  <Button type="button" variant="secondary" onClick={() => setView('sessions')}>
+                    View all {sessions.length} sessions
+                  </Button>
+                </div>
+              )}
             </>
           )}
           {view === 'sessions' && (
             <>
-              <SessionTable
-                sessions={sessions}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-              />
+              <div style={{ marginBottom: '1rem' }}>
+                <Button type="button" variant="ghost" onClick={() => setView('overview')}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                    home
+                  </span>
+                  Overview
+                </Button>
+              </div>
+              <SessionTable sessions={sessions} selectedId={selectedId} onSelect={setSelectedId} />
               <SessionDetailPanel
                 detail={detail}
                 feedbackStatus={feedbackStatus}

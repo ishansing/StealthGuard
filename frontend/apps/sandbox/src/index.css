@@ -1,26 +1,53 @@
+@import '../../../assets/font/ProtoMono.css';
+
 :root {
   color-scheme: dark;
   font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
-  line-height: 1.5;
+    'Proto Mono',
+    ui-monospace,
+    'SFMono-Regular',
+    'Menlo',
+    'Consolas',
+    monospace;
+  line-height: 1.6;
+  font-size: 15px;
 
-  --bg: #0d0d0d;
-  --surface: #1a1a1a;
-  --surface-container: #201f1f;
-  --surface-container-high: #2a2a2a;
-  --surface-container-highest: #353534;
-  --surface-bright: #3a3939;
-  --fg: #e5e2e1;
-  --fg-variant: #c4c6cf;
-  --muted: #888888;
-  --border: #2d2d2d;
-  --primary: #6c87af;
-  --primary-light: #adc8f3;
-  --success: #a7a99a;
-  --danger: #ef4444;
-  --warning: #fbbf24;
+  --bg: #0a0d12;
+  --surface: #12161e;
+  --surface-container: #171c26;
+  --surface-container-high: #1e242f;
+  --surface-container-highest: #2a3242;
+  --surface-bright: #2f3849;
+  --fg: #e6ebf2;
+  --fg-variant: #b6c0cf;
+  --muted: #7d8796;
+  --border: #232a37;
+  --primary: #4f9cf0;
+  --primary-light: #9cc8f7;
+  --success: #4ade80;
+  --danger: #f87171;
+  --warning: #facc15;
+  --focus-ring: rgba(79, 156, 240, 0.35);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
 }
 
 *,

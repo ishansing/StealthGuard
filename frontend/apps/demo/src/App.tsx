@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Button, IconButton } from '@stealthguard/ui'
 import { useStealthGuard, type Decision } from '@stealthguard/sdk'
 import './App.css'
 
@@ -64,12 +65,19 @@ function AccessibleChallenge({
 }) {
   const [answer, setAnswer] = useState('')
   const [result, setResult] = useState<Decision | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    const decision = await respondChallenge(answer)
-    setResult(decision)
-    setAnswer('')
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      const decision = await respondChallenge(answer)
+      setResult(decision)
+      setAnswer('')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const speak = () => {
@@ -98,18 +106,15 @@ function AccessibleChallenge({
           />
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button type="submit" className="login-btn" style={{ flex: 1 }}>
+          <Button type="submit" loading={submitting} style={{ flex: 1 }}>
             Submit
-          </button>
-          <button
-            type="button"
-            className="login-btn"
-            onClick={speak}
-            style={{ flex: 1, background: 'var(--surface-container-high)' }}
-          >
-            <span className="material-symbols-outlined">volume_up</span>
+          </Button>
+          <Button type="button" variant="secondary" onClick={speak} style={{ flex: 1 }}>
+            <span className="material-symbols-outlined" aria-hidden="true">
+              volume_up
+            </span>
             Audio
-          </button>
+          </Button>
         </div>
       </form>
       {result && (
@@ -133,6 +138,7 @@ export default function App() {
     page: '/login',
     flushIntervalMs: 60000,
   })
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [submitted, setSubmitted] = useState<Decision | null>(null)
@@ -140,10 +146,14 @@ export default function App() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (busy) return
     setBusy(true)
-    const result = await flush()
-    setSubmitted(result)
-    setBusy(false)
+    try {
+      const result = await flush()
+      setSubmitted(result)
+    } finally {
+      setBusy(false)
+    }
   }
 
   const activeDecision = submitted ?? decision
@@ -163,79 +173,121 @@ export default function App() {
     : 'var(--success)'
 
   return (
-    <main>
-      <div className="demo-container">
-        <header className="demo-header">
-          <h1>StealthGuard Demo</h1>
-          <p className="tagline">Passive bot detection — no CAPTCHA needed.</p>
-        </header>
+    <div className="app-layout">
+      {/* Top Nav */}
+      <header className="top-nav">
+        <span className="top-nav-brand">StealthGuard</span>
+        <nav className="top-nav-links">
+          <span className="top-nav-link active">DEMO</span>
+          <a className="top-nav-link" href="http://localhost:5174">
+            ADMIN
+          </a>
+          <a className="top-nav-link" href="http://localhost:5175">
+            SANDBOX
+          </a>
+        </nav>
 
-        <section className="status-panel" aria-live="polite" aria-atomic="true">
-          <div className="status-header">
-            <span className="label">Telemetry Status</span>
-            <span className="status" style={{ color: statusColor }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                {activeDecision ? 'check_circle' : 'hourglass_empty'}
+        <IconButton
+          type="button"
+          variant="ghost"
+          icon={mobileOpen ? 'close' : 'menu'}
+          label="Toggle navigation menu"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-menu"
+          onClick={() => setMobileOpen((o) => !o)}
+          className="top-nav-hamburger"
+        />
+      </header>
+
+      {/* Mobile Nav */}
+      {mobileOpen && (
+        <nav className="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
+          <span className="top-nav-link active">DEMO</span>
+          <a className="top-nav-link" href="http://localhost:5174">
+            ADMIN
+          </a>
+          <a className="top-nav-link" href="http://localhost:5175">
+            SANDBOX
+          </a>
+        </nav>
+      )}
+
+      {/* Main Content */}
+      <main className="main-content">
+        <div className="demo-container">
+          <header className="demo-header">
+            <h1>StealthGuard Demo</h1>
+            <p className="tagline">Passive bot detection — no CAPTCHA needed.</p>
+          </header>
+
+          <section className="status-panel" aria-live="polite" aria-atomic="true">
+            <div className="status-header">
+              <span className="label">Telemetry Status</span>
+              <span className="status" style={{ color: statusColor }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                  {activeDecision ? 'check_circle' : 'hourglass_empty'}
+                </span>
+                {statusLabel}
               </span>
-              {statusLabel}
-            </span>
-          </div>
-          <DecisionStatus decision={activeDecision} live={submitted === null} />
-        </section>
+            </div>
+            <DecisionStatus decision={activeDecision} live={submitted === null} />
+          </section>
 
-        {!ready && (
-          <p role="status" style={{ color: 'var(--muted)', textAlign: 'center' }}>
-            Connecting…
-          </p>
-        )}
+          {!ready && (
+            <p role="status" style={{ color: 'var(--muted)', textAlign: 'center' }}>
+              Connecting…
+            </p>
+          )}
 
-        <form className="login-panel" onSubmit={onSubmit}>
-          <h2>Authenticate</h2>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
-              placeholder="user@example.com"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              placeholder="••••••••"
-            />
-          </div>
-          <button type="submit" className="login-btn" disabled={busy || !ready} aria-label="Sign in">
-            <span>{busy ? 'Checking…' : 'LOGIN'}</span>
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              login
-            </span>
-          </button>
-        </form>
+          <form className="login-panel" onSubmit={onSubmit}>
+            <h2>Authenticate</h2>
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+                placeholder="user@example.com"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder="••••••••"
+              />
+            </div>
+            <Button type="submit" disabled={!ready} loading={busy} aria-label="Sign in">
+              <span>{busy ? 'Checking…' : 'LOGIN'}</span>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+                aria-hidden="true"
+              >
+                login
+              </span>
+            </Button>
+          </form>
 
-        {decision?.decision === 'challenge' && (
-          <AccessibleChallenge respondChallenge={respondChallenge} />
-        )}
+          {decision?.decision === 'challenge' && (
+            <AccessibleChallenge respondChallenge={respondChallenge} />
+          )}
 
-        <footer className="demo-footer">
-          <p>
-            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
-              monitoring
-            </span>
-            Session is actively monitored by StealthGuard OS
-          </p>
-        </footer>
-      </div>
-    </main>
+          <footer className="demo-footer">
+            <p>
+              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+                monitoring
+              </span>
+              Session is actively monitored by StealthGuard
+            </p>
+          </footer>
+        </div>
+      </main>
+    </div>
   )
 }

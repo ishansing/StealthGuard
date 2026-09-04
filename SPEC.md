@@ -363,6 +363,7 @@ Every phase produces docs as part of its Definition of Done (§14) — this sect
 - `/docs/ml-design.md` — feature formulas, model rationale, evaluation metrics, explainability approach.
 - `PRIVACY.md`, `THREAT_MODEL.md` — data handling and STRIDE-style analysis.
 - `CONTRIBUTING.md`, `CHANGELOG.md` (Conventional Commits + Keep a Changelog format).
+- `frontend/AGENT_GUIDELINES.md` — mandatory rules for UI work: shared `@stealthguard/ui` primitives only, DESIGN.md tokens only, a regression test per interactive change.
 - `docs/demo-script.md` — a judge-facing 3–5 minute walkthrough.
 
 ---
@@ -844,6 +845,7 @@ Suggested order (each independently mergeable and demoable):
 - **Branches:** `phase-N/<short-slug>`.
 - **PRs:** template requires the Definition of Done checklist (§14) to be checked off before merge.
 - **Linting:** `make lint` must be clean across all three services before a phase is considered done.
+- **Frontend UI:** interactive elements must come from `@stealthguard/ui`; see [`frontend/AGENT_GUIDELINES.md`](frontend/AGENT_GUIDELINES.md). A bespoke `<button>`/`role="button"` outside that package fails the frontend lint check.
 - **Versioning:** the SDK package follows semantic versioning independently of the rest of the monorepo.
 
 ---

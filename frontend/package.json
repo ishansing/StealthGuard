@@ -17,7 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "lint": "oxlint apps packages",
+    "lint": "oxlint apps packages && ./scripts/check-shared-ui.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

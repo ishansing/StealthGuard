@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { Button, IconButton } from '@stealthguard/ui'
 import { useStealthGuard } from '@stealthguard/sdk'
 import { KeystrokeVisualizer } from './components/KeystrokeVisualizer'
 import { MousePathCanvas } from './components/MousePathCanvas'
@@ -73,6 +74,7 @@ export default function App() {
   const keystrokeBuffer = useRef<Array<{ key: string; holdMs: number }>>([])
   const mouseBuffer = useRef<Array<{ x: number; y: number; t: number }>>([])
   const [, setTick] = useState(0)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const onKeystroke = useCallback((e: { key: string; holdMs: number }) => {
     keystrokeBuffer.current = [...keystrokeBuffer.current.slice(-29), e]
@@ -152,7 +154,7 @@ export default function App() {
     <div className="app-layout">
       {/* Top Nav */}
       <header className="top-nav">
-        <span className="top-nav-brand">STEALTHGUARD_OS</span>
+        <span className="top-nav-brand">StealthGuard</span>
         <nav className="top-nav-links">
           <a className="top-nav-link" href="http://localhost:5173">
             DEMO
@@ -162,18 +164,31 @@ export default function App() {
           </a>
           <span className="top-nav-link active">SANDBOX</span>
         </nav>
-        <div className="top-nav-actions">
-          <button type="button" disabled>
-            <span className="material-symbols-outlined">terminal</span>
-          </button>
-          <button type="button" disabled>
-            <span className="material-symbols-outlined">settings</span>
-          </button>
-          <button type="button" disabled>
-            <span className="material-symbols-outlined">account_circle</span>
-          </button>
-        </div>
+
+        <IconButton
+          type="button"
+          variant="ghost"
+          icon={mobileOpen ? 'close' : 'menu'}
+          label="Toggle navigation menu"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-menu"
+          onClick={() => setMobileOpen((o) => !o)}
+          className="top-nav-hamburger"
+        />
       </header>
+
+      {/* Mobile Nav */}
+      {mobileOpen && (
+        <nav className="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
+          <a className="top-nav-link" href="http://localhost:5173">
+            DEMO
+          </a>
+          <a className="top-nav-link" href="http://localhost:5174">
+            ADMIN
+          </a>
+          <span className="top-nav-link active">SANDBOX</span>
+        </nav>
+      )}
 
       {/* Main Content */}
       <main className="main-content">
@@ -196,18 +211,16 @@ export default function App() {
             />
           </div>
           <div className="input-actions">
-            <button
-              type="button"
-              className="score-btn"
-              disabled={!ready}
-              onClick={() => void flush()}
-              data-testid="score-it"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '1.2rem' }}>
+            <Button type="button" disabled={!ready} onClick={() => flush()} data-testid="score-it">
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: '1.2rem' }}
+                aria-hidden="true"
+              >
                 analytics
               </span>
               Score it
-            </button>
+            </Button>
           </div>
         </section>
 
@@ -261,13 +274,9 @@ export default function App() {
           {activePersona && (
             <div className="viz-header">
               <span className="viz-active-persona">Viewing: {activePersona}</span>
-              <button
-                type="button"
-                className="viz-clear-btn"
-                onClick={() => setActivePersona(null)}
-              >
+              <Button type="button" variant="secondary" onClick={() => setActivePersona(null)}>
                 ← Back to live
-              </button>
+              </Button>
             </div>
           )}
           <KeystrokeVisualizer

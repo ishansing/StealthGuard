@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useEffect } from 'react'
+import { Button } from '@stealthguard/ui'
 import { DecisionBadge } from './DecisionBadge'
 
 interface Telemetry {
@@ -9,7 +10,6 @@ interface Telemetry {
 
 interface PersonaMeta {
   label: string
-  emoji: string
   description: string
   color: string
 }
@@ -29,25 +29,21 @@ interface Props {
 const PERSONA_META: Record<string, PersonaMeta> = {
   'naive bot': {
     label: 'Naive Bot',
-    emoji: '🤖',
     description: 'Uniform timing, straight lines',
     color: '#ef4444',
   },
   'adaptive bot': {
     label: 'Adaptive Bot',
-    emoji: '🔄',
     description: 'Slightly varied, still mechanical',
     color: '#f59e0b',
   },
   'tremor user': {
     label: 'Tremor User',
-    emoji: '🫨',
     description: 'Irregular but atypical patterns',
     color: '#8b5cf6',
   },
   'human-like': {
     label: 'Human',
-    emoji: '🧑',
     description: 'Natural rhythm and movement',
     color: '#22c55e',
   },
@@ -158,7 +154,7 @@ export function PersonaShowdown({ personas, results, onRun, onRunAll }: Props) {
       Object.fromEntries(
         names.map((n) => [
           n,
-          PERSONA_META[n] ?? { label: n, emoji: '❓', description: '', color: '#666' },
+          PERSONA_META[n] ?? { label: n, description: '', color: '#666' },
         ]),
       ),
     [names],
@@ -172,9 +168,9 @@ export function PersonaShowdown({ personas, results, onRun, onRunAll }: Props) {
     <section className="persona-showdown" aria-label="Compare personas">
       <div className="showdown-header">
         <h2>Persona Showdown</h2>
-        <button type="button" className="run-all-btn" onClick={handleRunAll}>
+        <Button type="button" variant="secondary" onClick={handleRunAll}>
           Run All
-        </button>
+        </Button>
       </div>
       <p className="showdown-desc">How would the system treat different inputs?</p>
       <div className="persona-grid">
@@ -189,7 +185,6 @@ export function PersonaShowdown({ personas, results, onRun, onRunAll }: Props) {
               aria-label={`${m.label}: ${r ? `${r.decision}, score ${r.score?.toFixed(3) ?? '—'}` : 'not scored yet'}`}
             >
               <div className="persona-header">
-                <span className="persona-emoji">{m.emoji}</span>
                 <span className="persona-name">{m.label}</span>
               </div>
               <p className="persona-desc">{m.description}</p>
@@ -203,14 +198,14 @@ export function PersonaShowdown({ personas, results, onRun, onRunAll }: Props) {
                   <DecisionBadge decision={r.decision} score={r.score} />
                 </div>
               )}
-              <button
+              <Button
                 type="button"
-                className="persona-run-btn"
+                variant="secondary"
                 onClick={() => onRun(name)}
                 data-testid={`persona-${name}`}
               >
                 {r ? 'Re-run' : 'Run'}
-              </button>
+              </Button>
             </div>
           )
         })}

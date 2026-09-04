@@ -13,6 +13,7 @@ COPY frontend/tsconfig.base.json frontend/vitest.config.ts frontend/playwright.c
 COPY frontend/.prettierrc.json frontend/.prettierignore ./
 COPY frontend/apps apps
 COPY frontend/packages packages
+COPY frontend/assets assets
 COPY fixtures fixtures
 
 # Install after apps are present so workspace packages resolve.
