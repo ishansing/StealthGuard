@@ -79,6 +79,25 @@ def sigmoid(x: float) -> float:
     return 1.0 / (1.0 + math.exp(-x))
 
 
+# Clamp standardized feature values to this many standard deviations before
+# weighting. Anchored on live telemetry: a single outlier feature (e.g.
+# micro-tremor on a buffer that holds only mouse jitter) used to drive the
+# logit unboundedly and pin a near-empty session to a confident "human" 1.0.
+# Genuine human sessions stay within ~±3σ (verified unchanged); only
+# outlier-dominated buffers are pulled away from extreme scores.
+Z_CLIP = 3.0
+
+# Small-sample keyboard prior (rule-based baseline only). The baseline assumes
+# plentiful keyboard AND mouse telemetry, so a short-but-real typing burst
+# (e.g. a 1–2 key test) scores ~0 because absent-mouse and low keystroke
+# variance are treated as bot evidence. Pull such sessions toward the neutral
+# 0.5, but only when there is genuine keyboard input, and taper the pull as the
+# input grows (so a real bot with many keystrokes is still flagged low, and a
+# mouse-only / jitter buffer with zero keystrokes is left untouched).
+KEYBOARD_PRIOR = 4.0
+KEYBOARD_DECAY = 2.0
+
+
 def label_for_score(score: float, human_threshold: float, bot_threshold: float) -> str:
     if score >= human_threshold:
         return "human"
@@ -203,14 +222,37 @@ class RuleBasedScorer(Scorer):
         self.version = model_version
         self.model_version = model_version
 
+    def _prior_dampening(self, features: dict[str, float]) -> float:
+        """Uniform dampening factor from the small-sample keyboard prior.
+
+        Returns a multiplier in [0, 1] applied to every feature contribution. A
+        short-but-real typing burst yields a high dampening (the score is pulled
+        toward the neutral 0.5), while a full session or a mouse-only buffer gets
+        ~1.0 (unchanged). Applying it to each contribution keeps the logit, label,
+        and reason codes mutually consistent — they all derive from the same
+        dampened values — so the returned explanation always matches the score.
+        """
+        if KEYBOARD_PRIOR <= 0.0:
+            return 1.0
+        keyboard_count = features.get("event_count", 0.0) * features.get("keystroke_share", 0.0)
+        if keyboard_count <= 0.0:
+            return 1.0
+        shrink = min(1.0, KEYBOARD_PRIOR * math.exp(-keyboard_count / KEYBOARD_DECAY))
+        return 1.0 - shrink
+
     def _logit(self, features: dict[str, float]) -> tuple[float, dict[str, float]]:
+        dampening = self._prior_dampening(features)
         logit = 0.0
         contributions: dict[str, float] = {}
         for feature, (mean, std, direction, weight) in self.HUMAN_BASELINE.items():
             if feature not in features:
                 continue
             z = (features[feature] - mean) / std if std else 0.0
-            contribution = weight * direction * z
+            if z < -Z_CLIP:
+                z = -Z_CLIP
+            elif z > Z_CLIP:
+                z = Z_CLIP
+            contribution = weight * direction * z * dampening
             contributions[feature] = contribution
             logit += contribution
         return logit, contributions
@@ -277,7 +319,7 @@ class MLScorer(Scorer):
                 z.append(0.0)
             else:
                 x = features.get(f, mean)
-                z.append((x - mean) / std)
+                z.append(max(-Z_CLIP, min(Z_CLIP, (x - mean) / std)))
         return z
 
     def score(self, features: dict[str, float]) -> ScoreResult:
