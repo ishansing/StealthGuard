@@ -47,7 +47,7 @@ test('human-like interaction resolves to allow', async ({ page }) => {
 
   const result = page.getByTestId('submit-decision')
   await expect(result).toBeVisible({ timeout: 20000 })
-  await expect(result).toContainText('allow')
+  await expect(result).toContainText(/allow/i)
 })
 
 test('uniform bot-like interaction resolves to block or challenge', async ({ page }) => {
@@ -63,5 +63,5 @@ test('uniform bot-like interaction resolves to block or challenge', async ({ pag
 
   const result = page.getByTestId('submit-decision')
   await expect(result).toBeVisible({ timeout: 20000 })
-  await expect(result).toContainText(/block|challenge/)
+  await expect(result).toContainText(/block|challenge/i)
 })
